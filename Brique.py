@@ -6,6 +6,7 @@ Hugo SAEZ
 08/10/2026
 
 To do :
+- outline couleur méthode + appel dans classe partie
 
 """
 

@@ -8,6 +8,7 @@ Reste à faire : TOUT
 """
 
 import tkinter as tk
+from Brique import Brique
 from Balle import Balle
 from animation import AnimationBalle
 
@@ -43,6 +44,7 @@ class Partie:
         self.terrain.create_rectangle( 2,     2,     self.LARGEUR - 2,     self.HAUTEUR - 2,     outline="green",     width=3,)
 
         self.briques = []
+        self.objets_briques = []
         largeur_brique = 100
         hauteur_brique = 30
         nb_colonnes = 5
@@ -55,16 +57,19 @@ class Partie:
             for j in range(nb_colonnes):
                 x1 = marge_x + j * (largeur_brique + ecart)
                 y1 = marge_y + i * (hauteur_brique + ecart)
-                x2 = x1 + largeur_brique
-                y2 = y1 + hauteur_brique
-
-                brique = self.terrain.create_rectangle(
-                    x1, y1, x2, y2,
-                    fill="red",
-                    outline="yellow",
-                    width=3
+                brique = Brique(
+                    self.terrain,
+                    x1,
+                    y1,
+                    largeur_brique,
+                    hauteur_brique,
+                    "red",
+                    1,
                 )
-                self.briques.append(brique)
+                brique.dessin()
+                self.objets_briques.append(brique)
+                # L'animation utilise les identifiants du canvas pour détecter les collisions.
+                self.briques.append(self.terrain.find_all()[-1])
     
         self.balle = Balle(
             self.terrain,
