@@ -70,3 +70,12 @@ class Brique :
             """
     
             return self.largeur, self.hauteur, self.couleur
+
+    def vie_brq (self) :
+          """
+          Retourne le nombre de vies restantes de la brique
+          
+          :return: nb_vie_brique
+          """
+
+          return self.nb_vie_brique
