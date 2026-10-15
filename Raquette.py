@@ -41,6 +41,16 @@ class Raquette :
 
         self.canvas.create_rectangle(self.x, self.y, self.x + self.largeur, self.y + self.hauteur, fill=self.couleur)
 
+
+    def canvas (self) :
+        """
+        Retourne le canvas
+
+        :return: canvas
+        """
+
+        return self.canvas
+
     def pos_xy (self) :
         """
         Retourne les positions x et y de la raquette
@@ -52,5 +62,9 @@ class Raquette :
 
     def stats_raq (self) :
         """
-        Retourne 
+        Retourne les statistiques visuelles de la raquette
+
+        :return: largeur, hauteur, couleur
         """
+
+        return self.largeur, self.hauteur, self.couleur
