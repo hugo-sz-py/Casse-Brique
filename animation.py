@@ -24,6 +24,7 @@ class AnimationBalle:
         terrain: tk.Canvas,
         balle: Balle,
         briques: list[int],
+        raquette_id: int,
         largeur: int,
         hauteur: int,
         afficher_defaite: Callable[[], None],
@@ -35,6 +36,7 @@ class AnimationBalle:
             terrain: canvas Tkinter de la partie.
             balle: balle à déplacer.
             briques: liste modifiable des identifiants des briques.
+            raquette_id: identifiant de la raquette sur le canvas.
             largeur: largeur du terrain, en pixels.
             hauteur: hauteur du terrain, en pixels.
             afficher_defaite: fonction affichant la fenêtre de défaite.
@@ -46,6 +48,7 @@ class AnimationBalle:
         self.terrain = terrain
         self.balle = balle
         self.briques = briques
+        self.raquette_id = raquette_id
         self.largeur = largeur
         self.hauteur = hauteur
         self.afficher_defaite = afficher_defaite
@@ -66,7 +69,8 @@ class AnimationBalle:
         """Effectue un pas d'animation et programme le suivant.
 
         Fait rebondir la balle sur les murs, supprime les briques touchées et
-        déclenche la défaite si la balle atteint le bas du terrain.
+        la fait rebondir sur la raquette. Déclenche la défaite si la balle
+        atteint le bas du terrain.
 
         Returns:
             None.
@@ -92,7 +96,19 @@ class AnimationBalle:
                 self.balle.dy = -self.balle.dy
                 self.terrain.delete(objet)
                 self.briques.remove(objet)
-                break
+
+        raquette_x1, raquette_y1, raquette_x2, _ = self.terrain.coords(
+            self.raquette_id
+        )
+        balle_x1, balle_y1, balle_x2, balle_y2 = self.balle.coordonnees()
+        if (
+            self.balle.dy > 0
+            and balle_y2 <= raquette_y1
+            and balle_y2 + self.balle.dy >= raquette_y1
+            and balle_x2 + self.balle.dx >= raquette_x1
+            and balle_x1 + self.balle.dx <= raquette_x2
+        ):
+            self.balle.dy = -abs(self.balle.dy)
 
         self.balle.deplacer()
         self.animation_id = self.terrain.after(self.delai, self.deplacement)

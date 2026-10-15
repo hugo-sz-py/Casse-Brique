@@ -96,6 +96,7 @@ class Partie:
             self.terrain,
             self.balle,
             self.briques,
+            self.raquette_id,
             self.LARGEUR,
             self.HAUTEUR,
             self.afficher_defaite,
