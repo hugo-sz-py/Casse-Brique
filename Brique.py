@@ -40,3 +40,42 @@ class Brique :
         """
 
         self.canvas.create_rectangle(self.x, self.y, self.x + self.largeur, self.y + self.hauteur, fill=self.couleur)
+
+
+    def canvas (self) :
+            """
+            Retourne le canvas
+    
+            :return: canvas
+            """
+    
+            return self.canvas
+
+
+    def pos_xy (self) :
+            """
+            Retourne les positions x et y de la raquette
+    
+            :return: position x, position y
+            """
+    
+            return self.x, self.y
+
+
+    def stats_brq (self) :
+            """
+            Retourne les statistiques visuelles de la raquette
+    
+            :return: largeur, hauteur, couleur
+            """
+    
+            return self.largeur, self.hauteur, self.couleur
+
+    def vie_brq (self) :
+          """
+          Retourne le nombre de vies restantes de la brique
+          
+          :return: nb_vie_brique
+          """
+
+          return self.nb_vie_brique
