@@ -10,6 +10,7 @@ Reste à faire : TOUT
 import tkinter as tk
 from Brique import Brique
 from Balle import Balle
+from Raquette import Raquette
 from animation import AnimationBalle
 
 class Partie:
@@ -42,6 +43,21 @@ class Partie:
         self.terrain = tk.Canvas(fenetre, width=self.LARGEUR, height=self.HAUTEUR, bg="black", highlightthickness=0,)
         self.terrain.place(relx=0.5, y=65, anchor="n")
         self.terrain.create_rectangle( 2,     2,     self.LARGEUR - 2,     self.HAUTEUR - 2,     outline="green",     width=3,)
+
+        largeur_raquette = 100
+        self.raquette = Raquette(
+            self.terrain,
+            (self.LARGEUR - largeur_raquette) / 2,
+            self.HAUTEUR - 35,
+            largeur_raquette,
+            15,
+            "white",
+        )
+        self.raquette.dessin()
+        self.raquette_id = self.terrain.find_all()[-1]
+        self.terrain.bind("<Left>", self.deplacer_raquette_gauche)
+        self.terrain.bind("<Right>", self.deplacer_raquette_droite)
+        self.terrain.focus_set()
 
         self.briques = []
         self.objets_briques = []
@@ -86,6 +102,43 @@ class Partie:
         )
         self.fenetre.protocol("WM_DELETE_WINDOW", self.fermer)
         self.animation.demarrer()
+
+    def deplacer_raquette(self, distance: float) -> None:
+        """Déplace horizontalement la raquette sans la faire sortir du terrain.
+
+        Args:
+            distance: déplacement demandé en pixels (négatif vers la gauche,
+                positif vers la droite).
+
+        Returns:
+            None.
+        """
+        x1, _, x2, _ = self.terrain.coords(self.raquette_id)
+        nouveau_x1 = max(3, min(x1 + distance, self.LARGEUR - 3 - self.raquette.largeur))
+        self.terrain.move(self.raquette_id, nouveau_x1 - x1, 0)
+        self.raquette.x = nouveau_x1
+
+    def deplacer_raquette_gauche(self, event: tk.Event) -> None:
+        """Déplace la raquette vers la gauche à la pression de la flèche gauche.
+
+        Args:
+            event: événement clavier Tkinter associé à la pression de la touche.
+
+        Returns:
+            None.
+        """
+        self.deplacer_raquette(-25)
+
+    def deplacer_raquette_droite(self, event: tk.Event) -> None:
+        """Déplace la raquette vers la droite à la pression de la flèche droite.
+
+        Args:
+            event: événement clavier Tkinter associé à la pression de la touche.
+
+        Returns:
+            None.
+        """
+        self.deplacer_raquette(25)
 
     def afficher_defaite(self) -> None:
         """Affiche la fenêtre de fin lorsque la balle est perdue.

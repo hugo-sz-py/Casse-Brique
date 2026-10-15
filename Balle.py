@@ -21,7 +21,7 @@ class Balle:
     """
 
     RAYON = 15
-    VITESSE = 12
+    VITESSE = 5
 
     def __init__(self, terrain: tk.Canvas, x: float, y: float) -> None:
         """Crée et dessine une balle à la position indiquée.
