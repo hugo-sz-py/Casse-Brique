@@ -50,7 +50,7 @@ class Partie:
         self.terrain.place(relx=0.5, y=65, anchor="n")
         self.terrain.create_rectangle( 2,     2,     self.LARGEUR - 2,     self.HAUTEUR - 2,     outline="green",     width=3,)
 
-        largeur_raquette = 100
+        largeur_raquette = 150
         self.raquette = Raquette(
             self.terrain,
             (self.LARGEUR - largeur_raquette) / 2,
@@ -100,7 +100,7 @@ class Partie:
         self.balle = Balle(
             self.terrain,
             self.LARGEUR / 2,
-            self.HAUTEUR / 2,
+            self.HAUTEUR / 1.10,
         )
         self.animation = AnimationBalle(
             self.terrain,
@@ -155,6 +155,9 @@ class Partie:
     def ajouter_point(self) -> None:
         self.score += 1
         self.score_label.config(text=f"Score : {self.score}")
+        if not self.briques:
+            self.animation.arreter()
+            self.afficher_victoire()
 
     def perdre_vie(self) -> None:
         """Retire une vie et replace la balle, ou termine la partie à zéro.
@@ -169,11 +172,6 @@ class Partie:
             self.afficher_defaite()
             return
 
-
-        if AnimationBalle.self.briques == [] :
-            self.afficher_victoire
-            return
-        
 
         self.terrain.coords(
             self.balle.identifiant,

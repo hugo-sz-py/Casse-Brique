@@ -5,12 +5,11 @@ d'événements Tkinter lorsque ce fichier est exécuté directement.
 
 To do :
 - Menu pause
-- Balle qui part de plus bas
-- Victoire
-- Changer le rebond selon la position de la raquette
 - Utilisation des piles/files
-- Mode avec vitesse qui augmente
-- Mode infini
+!!! - Visée à la souris !!!
+(- Mode avec vitesse qui augmente
+(- Mode infini
+(- Mode forcé de toucher (grâce à la visée) une brique à chaque coup (avant de retoucher la raquette)
 """
 
 from classcassebrique import CasseBriques

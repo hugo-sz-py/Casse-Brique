@@ -1,6 +1,6 @@
 import tkinter as tk
 from collections.abc import Callable
-
+import math
 from Balle import Balle
 
 
@@ -102,6 +102,9 @@ class AnimationBalle:
                 self.ajouter_point()
                 break
 
+        if self.arretee:
+            return
+
         raquette_x1, raquette_y1, raquette_x2, _ = self.terrain.coords(
             self.raquette_id
         )
@@ -113,7 +116,21 @@ class AnimationBalle:
             and balle_x2 + self.balle.dx >= raquette_x1
             and balle_x1 + self.balle.dx <= raquette_x2
         ):
-            self.balle.dy = -abs(self.balle.dy)
+            centre_raquette = (raquette_x1 + raquette_x2) / 2
+            impact_x = (balle_x1 + balle_x2) / 2 + self.balle.dx
+
+            # Position du contact entre -1 (bord gauche) et 1 (bord droit).
+            decalage = (impact_x - centre_raquette) / (
+                (raquette_x2 - raquette_x1) / 2
+            )
+            decalage = max(-1, min(1, decalage))
+
+            vitesse = math.hypot(self.balle.dx, self.balle.dy)
+            angle_max = math.radians(60)
+            angle = decalage * angle_max
+
+            self.balle.dx = vitesse * math.sin(angle)
+            self.balle.dy = -vitesse * math.cos(angle)
 
         self.balle.deplacer()
         self.animation_id = self.terrain.after(self.delai, self.deplacement)
