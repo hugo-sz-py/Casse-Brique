@@ -169,6 +169,12 @@ class Partie:
             self.afficher_defaite()
             return
 
+
+        if AnimationBalle.self.briques == [] :
+            self.afficher_victoire
+            return
+        
+
         self.terrain.coords(
             self.balle.identifiant,
             self.LARGEUR / 2 - self.balle.rayon,
@@ -219,6 +225,47 @@ class Partie:
             lambda: self.quitter(fenetre_fin),
         )
         fenetre_fin.grab_set()
+
+
+    def afficher_victoire(self) -> None:
+            """Affiche la fenêtre de fin lorsque la balle est perdue.
+    
+            La fenêtre propose de rejouer ou de quitter la partie.
+    
+            Args:
+                Aucun.
+    
+            Returns:
+                None.
+            """
+            self.terminee = True
+            fenetre_fin = tk.Toplevel(self.fenetre)
+            fenetre_fin.title("Victoire")
+            fenetre_fin.geometry("300x140")
+            fenetre_fin.transient(self.fenetre)
+            fenetre_fin.resizable(False, False)
+        
+            tk.Label(
+                fenetre_fin,
+                text="Vous avez gagné !",
+                font=("Arial", 16),
+            ).pack(pady=15)
+            tk.Button(
+                fenetre_fin,
+                text="Rejouer",
+                command=lambda: self.rejouer(fenetre_fin),
+            ).pack(side="left", expand=True)
+            tk.Button(
+                fenetre_fin,
+                text="Quitter",
+                command=lambda: self.quitter(fenetre_fin),
+            ).pack(side="right", expand=True)
+            fenetre_fin.protocol(
+                "WM_DELETE_WINDOW",
+                lambda: self.quitter(fenetre_fin),
+            )
+            fenetre_fin.grab_set()
+    
 
     def rejouer(self, fenetre_fin: tk.Toplevel) -> None:
         """Ferme la fenêtre de fin et démarre une nouvelle partie.
