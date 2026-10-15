@@ -13,7 +13,7 @@ class AnimationBalle:
         briques: identifiants des briques encore présentes sur le canvas.
         largeur: largeur du terrain, en pixels.
         hauteur: hauteur du terrain, en pixels.
-        afficher_defaite: fonction appelée quand la balle est perdue.
+        perdre_vie: fonction appelée quand la balle est perdue.
         delai: délai entre deux déplacements, en millisecondes.
         animation_id: identifiant du prochain déplacement programmé, ou None.
         arretee: indique si l'animation est arrêtée.
@@ -27,7 +27,8 @@ class AnimationBalle:
         raquette_id: int,
         largeur: int,
         hauteur: int,
-        afficher_defaite: Callable[[], None],
+        perdre_vie: Callable[[], None],
+        ajouter_point: Callable[[], None],
         delai: int = 16,
     ) -> None:
         """Prépare l'animation de la balle sans la démarrer.
@@ -39,7 +40,8 @@ class AnimationBalle:
             raquette_id: identifiant de la raquette sur le canvas.
             largeur: largeur du terrain, en pixels.
             hauteur: hauteur du terrain, en pixels.
-            afficher_defaite: fonction affichant la fenêtre de défaite.
+            perdre_vie: fonction retirant une vie et relançant ou terminant
+                la partie.
             delai: temps entre deux déplacements, en millisecondes.
 
         Returns:
@@ -51,10 +53,11 @@ class AnimationBalle:
         self.raquette_id = raquette_id
         self.largeur = largeur
         self.hauteur = hauteur
-        self.afficher_defaite = afficher_defaite
+        self.perdre_vie = perdre_vie
         self.delai = delai
         self.animation_id: str | None = None
         self.arretee = True
+        self.ajouter_point = ajouter_point
 
     def demarrer(self) -> None:
         """Démarre l'animation en effectuant le premier déplacement.
@@ -85,7 +88,7 @@ class AnimationBalle:
             self.balle.dx = -self.balle.dx
         if self.balle.dy > 0 and y2 + self.balle.dy >= self.hauteur - 3:
             self.arreter()
-            self.afficher_defaite()
+            self.perdre_vie()
             return
         if self.balle.dy < 0 and y1 + self.balle.dy <= 3:
             self.balle.dy = -self.balle.dy
@@ -96,6 +99,8 @@ class AnimationBalle:
                 self.balle.dy = -self.balle.dy
                 self.terrain.delete(objet)
                 self.briques.remove(objet)
+                self.ajouter_point()
+                break
 
         raquette_x1, raquette_y1, raquette_x2, _ = self.terrain.coords(
             self.raquette_id

@@ -41,11 +41,13 @@ class CasseBriques:
 
         # Bonne pratique : appeler `.place()` séparément de la création du
         # widget évite de confondre son résultat (None) avec le widget lui-même.
-        tk.Label(jeu, text="Score : 0", bg="black", fg="white", font=("Arial", 16)).place(x=10, y=10)
+        score_label = tk.Label(jeu, text="Score : 0", bg="black", fg="white", font=("Arial", 16))
+        score_label.place(x=10, y=10)        
         tk.Label(jeu, text="Casse-brique", bg="black", fg="white", font=("Arial", 16)).place(relx=0.5, y=10, anchor="n")
-        tk.Label(jeu, text="Vies : 3", bg="black", fg="white", font=("Arial", 16)).place(relx=1.0, x=-10, y=10, anchor="ne")
+        vies_label = tk.Label(jeu, text="Vies : 3", bg="black", fg="white", font=("Arial", 16))
+        vies_label.place(relx=1.0, x=-10, y=10, anchor="ne")
 
-        Pt.Partie(jeu, self)
+        Pt.Partie(jeu, self, score_label, vies_label)
 
     def lancer(self) -> None:
         """Démarre la boucle d'événements de l'application."""

@@ -24,7 +24,13 @@ class Partie:
     LARGEUR = 700
     HAUTEUR = 460
 
-    def __init__(self, fenetre: tk.Toplevel, application) -> None:
+    def __init__(
+        self,
+        fenetre: tk.Toplevel,
+        application,
+        score_label: tk.Label,
+        vies_label: tk.Label,
+    ) -> None:
         """Initialise une partie dans une fenêtre Tkinter existante.
 
         Crée le terrain et les briques, créé la balle et son animation,
@@ -68,6 +74,10 @@ class Partie:
         marge_x = 50
         marge_y = 50
         ecart = 20
+        self.score = 0
+        self.score_label = score_label
+        self.vies = 3
+        self.vies_label = vies_label
 
         for i in range(nb_lignes):
             for j in range(nb_colonnes):
@@ -99,7 +109,8 @@ class Partie:
             self.raquette_id,
             self.LARGEUR,
             self.HAUTEUR,
-            self.afficher_defaite,
+            self.perdre_vie,
+            self.ajouter_point,
         )
         self.fenetre.protocol("WM_DELETE_WINDOW", self.fermer)
         self.animation.demarrer()
@@ -140,6 +151,33 @@ class Partie:
             None.
         """
         self.deplacer_raquette(25)
+
+    def ajouter_point(self) -> None:
+        self.score += 1
+        self.score_label.config(text=f"Score : {self.score}")
+
+    def perdre_vie(self) -> None:
+        """Retire une vie et replace la balle, ou termine la partie à zéro.
+
+        Returns:
+            None.
+        """
+        self.vies -= 1
+        self.vies_label.config(text=f"Vies : {self.vies}")
+
+        if self.vies == 0:
+            self.afficher_defaite()
+            return
+
+        self.terrain.coords(
+            self.balle.identifiant,
+            self.LARGEUR / 2 - self.balle.rayon,
+            self.HAUTEUR / 2 - self.balle.rayon,
+            self.LARGEUR / 2 + self.balle.rayon,
+            self.HAUTEUR / 2 + self.balle.rayon,
+        )
+        self.balle.dy = -abs(self.balle.dy)
+        self.animation.demarrer()
 
     def afficher_defaite(self) -> None:
         """Affiche la fenêtre de fin lorsque la balle est perdue.
