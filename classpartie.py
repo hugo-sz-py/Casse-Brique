@@ -1,7 +1,7 @@
 # Header
 
 """
-Type de fichier : Fichier graphique
+Type de fichier : Fichier classe partie
 Date : 08/10/2026
 Auteur : Constantin QUESSARD
 Reste à faire : TOUT
@@ -19,7 +19,7 @@ class Partie:
     RAYON = 15
     DELAI_ANIMATION = 8*2
 
-    def __init__(self, fenetre: tk.Toplevel, application: CasseBriques) -> None:
+    def __init__(self, fenetre: tk.Toplevel, application) -> None:
         """Crée le terrain et la balle dans la fenêtre de jeu existante."""
         self.fenetre = fenetre
         self.application = application
@@ -140,8 +140,3 @@ class Partie:
             self.animation_id = None
         if self.fenetre.winfo_exists():
             self.fenetre.destroy()
-
-
-if __name__ == "__main__":
-    application = CasseBriques()
-    application.lancer()

@@ -1,16 +1,13 @@
 # Header
 
 """
-Type de fichier : Fichier graphique
+Type de fichier : Fichier classe casse brique
 Date : 08/10/2026
 Auteur : Constantin QUESSARD
 Reste à faire : TOUT
 """
 
 import tkinter as tk
-import math
-import random
-
 
 class CasseBriques:
     """Gère la fenêtre principale et les fenêtres de jeu."""
@@ -36,6 +33,8 @@ class CasseBriques:
         """Ouvre la fenêtre de jeu et affiche son interface."""
         # Bonne pratique : utiliser une Toplevel permet d'ajouter une fenêtre
         # secondaire sans créer une seconde fenêtre racine Tk.
+        import classpartie as Pt
+
         jeu = tk.Toplevel(self.fenetre, bg="black")
         jeu.title("Jeu casse-brique")
         jeu.geometry("800x540")
@@ -46,7 +45,7 @@ class CasseBriques:
         tk.Label(jeu, text="Casse-brique", bg="black", fg="white", font=("Arial", 16)).place(relx=0.5, y=10, anchor="n")
         tk.Label(jeu, text="Vies : 3", bg="black", fg="white", font=("Arial", 16)).place(relx=1.0, x=-10, y=10, anchor="ne")
 
-        Partie(jeu, self)
+        Pt.Partie(jeu, self)
 
     def lancer(self) -> None:
         """Démarre la boucle d'événements de l'application."""
