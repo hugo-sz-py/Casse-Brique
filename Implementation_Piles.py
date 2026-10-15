@@ -63,7 +63,7 @@ class Pile :
         :return: élément en tête de la pile
         """
 
-        if self.estvide():
+        if self.est_vide():
             raise IndexError("La pile est vide")
         return self.pile[0]
 

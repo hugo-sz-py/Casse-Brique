@@ -66,7 +66,7 @@ class File :
         :return: élément en tête de la file
         """
 
-        if self.estvide() :
+        if self.est_vide() :
             raise IndexError("La file est vide")
         return self.file[0]
 
