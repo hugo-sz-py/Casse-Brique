@@ -8,24 +8,36 @@ Reste à faire : TOUT
 """
 
 import tkinter as tk
-import math
-import random
+from Balle import Balle
+from animation import AnimationBalle
 
 class Partie:
-    """Gère le terrain et l'animation de la balle d'une partie."""
+    """Gère le terrain, les briques, la balle et la fin d'une partie.
+
+    Attributs de classe :
+        LARGEUR: largeur du terrain de jeu, en pixels.
+        HAUTEUR: hauteur du terrain de jeu, en pixels.
+    """
 
     LARGEUR = 700
     HAUTEUR = 460
-    RAYON = 15
-    DELAI_ANIMATION = 8*2
 
     def __init__(self, fenetre: tk.Toplevel, application) -> None:
-        """Crée le terrain et la balle dans la fenêtre de jeu existante."""
+        """Initialise une partie dans une fenêtre Tkinter existante.
+
+        Crée le terrain et les briques, créé la balle et son animation,
+        puis démarre le déplacement.
+
+        Args:
+            fenetre: fenêtre Tkinter dans laquelle afficher la partie.
+            application: application principale, utilisée pour relancer une partie.
+
+        Returns:
+            None.
+        """
         self.fenetre = fenetre
         self.application = application
         self.terminee = False
-        self.animation_id: str | None = None
-
         self.terrain = tk.Canvas(fenetre, width=self.LARGEUR, height=self.HAUTEUR, bg="black", highlightthickness=0,)
         self.terrain.place(relx=0.5, y=65, anchor="n")
         self.terrain.create_rectangle( 2,     2,     self.LARGEUR - 2,     self.HAUTEUR - 2,     outline="green",     width=3,)
@@ -54,51 +66,41 @@ class Partie:
                 )
                 self.briques.append(brique)
     
-        self.x = self.LARGEUR / 2
-        self.y = self.HAUTEUR / 2
-        vitesse = 12
-        angle = random.uniform(0, 2 * math.pi)
-        self.dx = vitesse * math.cos(angle)
-        self.dy = vitesse * math.sin(angle)
-
-        self.balle = self.terrain.create_oval(
-            self.x - self.RAYON,
-            self.y - self.RAYON,
-            self.x + self.RAYON,
-            self.y + self.RAYON,
-            outline="green",
-            fill="white",
+        self.balle = Balle(
+            self.terrain,
+            self.LARGEUR / 2,
+            self.HAUTEUR / 2,
+        )
+        self.animation = AnimationBalle(
+            self.terrain,
+            self.balle,
+            self.briques,
+            self.LARGEUR,
+            self.HAUTEUR,
+            self.afficher_defaite,
         )
         self.fenetre.protocol("WM_DELETE_WINDOW", self.fermer)
-        self.deplacement()
-
-    def deplacement(self) -> None:
-        """Déplace la balle et la fait rebondir sur les bords du terrain."""
-        self.animation_id = None
-        if self.terminee:
-            return
-
-        x1, y1, x2, y2 = self.terrain.coords(self.balle)
-
-        if x1 + self.dx <= 3 or x2 + self.dx >= self.LARGEUR - 3:
-            self.dx = -self.dx
-        if self.dy > 0 and y2 + self.dy >= self.HAUTEUR - 3:
-            self.afficher_defaite()
-            return
-        if self.dy < 0 and y1 + self.dy <= 3:
-            self.dy = -self.dy
-
-        self.terrain.move(self.balle, self.dx, self.dy)
-        self.animation_id = self.terrain.after(self.DELAI_ANIMATION, self.deplacement,)
+        self.animation.demarrer()
 
     def afficher_defaite(self) -> None:
-        """Affiche les choix proposés après la perte de la partie."""
+        """Affiche la fenêtre de fin lorsque la balle est perdue.
+
+        La fenêtre propose de rejouer ou de quitter la partie.
+
+        Args:
+            Aucun.
+
+        Returns:
+            None.
+        """
         self.terminee = True
         fenetre_fin = tk.Toplevel(self.fenetre)
         fenetre_fin.title("Fin de partie")
         fenetre_fin.geometry("300x140")
         fenetre_fin.transient(self.fenetre)
         fenetre_fin.resizable(False, False)
+
+        
 
         tk.Label(
             fenetre_fin,
@@ -122,21 +124,37 @@ class Partie:
         fenetre_fin.grab_set()
 
     def rejouer(self, fenetre_fin: tk.Toplevel) -> None:
-        """Ferme la partie terminée et en démarre une nouvelle."""
+        """Ferme la fenêtre de fin et démarre une nouvelle partie.
+
+        Args:
+            fenetre_fin: fenêtre de fin de partie à fermer.
+
+        Returns:
+            None.
+        """
         fenetre_fin.destroy()
         self.fermer()
         self.application.jouer()
 
     def quitter(self, fenetre_fin: tk.Toplevel) -> None:
-        """Ferme la partie et revient au menu principal."""
+        """Ferme la fenêtre de fin et la fenêtre de jeu.
+
+        Args:
+            fenetre_fin: fenêtre de fin de partie à fermer.
+
+        Returns:
+            None.
+        """
         fenetre_fin.destroy()
         self.fermer()
 
     def fermer(self) -> None:
-        """Arrête l'animation et ferme la fenêtre de jeu."""
+        """Arrête l'animation et ferme la fenêtre de jeu.
+
+        Returns:
+            None.
+        """
         self.terminee = True
-        if self.animation_id is not None and self.terrain.winfo_exists():
-            self.terrain.after_cancel(self.animation_id)
-            self.animation_id = None
+        self.animation.arreter()
         if self.fenetre.winfo_exists():
             self.fenetre.destroy()
