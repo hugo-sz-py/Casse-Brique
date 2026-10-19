@@ -6,6 +6,7 @@ d'événements Tkinter lorsque ce fichier est exécuté directement.
 To do :
 - Menu pause
 - Utilisation des piles/files
+- Réduire le temps avant les déplacements de la raquette
 !!! - Visée à la souris !!!
 (- Mode avec vitesse qui augmente
 (- Mode infini
