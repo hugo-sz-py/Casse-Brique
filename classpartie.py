@@ -126,15 +126,7 @@ class Partie:
             for j in range(self.nb_colonnes):
                 x1 = self.marge_x + j * (self.largeur_brique + self.ecart)
                 y1 = self.marge_y + i * (self.hauteur_brique + self.ecart)
-                brique = Brique(
-                    self.terrain,
-                    x1,
-                    y1,
-                    self.largeur_brique,
-                    self.hauteur_brique,
-                    "red",
-                    1,
-                )
+                brique = Brique(self.terrain, x1, y1, self.largeur_brique, self.hauteur_brique, "red", 1)
                 brique.dessin()
                 self.objets_briques.append(brique)
                 # L'animation utilise les identifiants du canvas pour détecter les collisions.
@@ -197,15 +189,13 @@ class Partie:
 
     def _animer_raquette(self) -> None:
         self._deplacement_raquette_id = None
-        if self.terminee:
+        if self.terminee: #Arrete si la partie est terminée
             return
 
-        maintenant = time.perf_counter()
+        maintenant = time.perf_counter() 
         delta_temps = min(maintenant - self._dernier_deplacement_raquette, 0.05)
         self._dernier_deplacement_raquette = maintenant
-        direction = int("Right" in self._touches_raquette) - int(
-            "Left" in self._touches_raquette
-        )
+        direction = int("Right" in self._touches_raquette) - int("Left" in self._touches_raquette)
         if direction:
             self.deplacer_raquette(
                 direction * self.VITESSE_RAQUETTE * delta_temps
