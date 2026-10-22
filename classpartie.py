@@ -77,13 +77,17 @@ class Partie:
         )
         self.raquette.dessin()
         self.raquette_id = self.terrain.find_all()[-1]
+        self._touches_raquette: set[str] = set() #Memorise les fleches actuellement enfoncées
+        self._dernier_deplacement_raquette = time.perf_counter() #Enregistre le time de début
+        self._deplacement_raquette_id: str | None = None
         self.terrain.bind("<KeyPress>", self._touche_raquette_enfoncee)
         self.terrain.bind("<KeyRelease>", self._touche_raquette_relachee)
-        self.terrain.bind("<FocusOut>", self._reinitialiser_touches_raquette)
+        #Permet de reinitialiser les touches si il y a un changement de fenetre
+        self.terrain.bind("<FocusOut>", self._reinitialiser_touches_raquette) 
         self.terrain.focus_set()
 
-        self.briques: list[int] = []
-        self.objets_briques: list[Brique] = []
+        self.briques = []
+        self.objets_briques = []
         largeur_brique = 100
         hauteur_brique = 30
         nb_colonnes = 5
@@ -93,7 +97,7 @@ class Partie:
         ecart = 20
         self.score = 0
         self.score_label = score_label
-        self.vies = 1 if self.difficulte == "hardcore" else 3
+        self.vies = 3
         self.vies_label = vies_label
         self.vies_label.config(text=f"Vies : {self.vies}")
 
@@ -106,11 +110,17 @@ class Partie:
         self.ecart = ecart
         self.creer_briques()
 
-        self.balle = Balle(
-            self.terrain,
-            self.LARGEUR / 2,
-            self.HAUTEUR / 1.10,
-        )
+        for i in range(nb_lignes):
+            for j in range(nb_colonnes):
+                x1 = marge_x + j * (largeur_brique + ecart)
+                y1 = marge_y + i * (hauteur_brique + ecart)
+                brique = Brique(self.terrain, x1, y1, largeur_brique, hauteur_brique, "red", 1)
+                brique.dessin()
+                self.objets_briques.append(brique)
+                # L'animation utilise les identifiants du canvas pour détecter les collisions.
+                self.briques.append(self.terrain.find_all()[-1])
+    
+        self.balle = Balle(self.terrain, self.LARGEUR / 2, self.HAUTEUR / 1.10)
         self.animation = AnimationBalle(
             self.terrain,
             self.balle,
@@ -133,15 +143,7 @@ class Partie:
             for j in range(self.nb_colonnes):
                 x1 = self.marge_x + j * (self.largeur_brique + self.ecart)
                 y1 = self.marge_y + i * (self.hauteur_brique + self.ecart)
-                brique = Brique(
-                    self.terrain,
-                    x1,
-                    y1,
-                    self.largeur_brique,
-                    self.hauteur_brique,
-                    "red",
-                    1,
-                )
+                brique = Brique(self.terrain, x1, y1, self.largeur_brique, self.hauteur_brique, "red", 1)
                 brique.dessin()
                 self.objets_briques.append(brique)
                 # L'animation utilise les identifiants du canvas pour détecter les collisions.
@@ -226,15 +228,13 @@ class Partie:
 
     def _animer_raquette(self) -> None:
         self._deplacement_raquette_id = None
-        if self.terminee or self.en_pause:
+        if self.terminee or self.en_pause: #Arrete si la partie est terminée ou en pause
             return
 
-        maintenant = time.perf_counter()
+        maintenant = time.perf_counter() 
         delta_temps = min(maintenant - self._dernier_deplacement_raquette, 0.05)
         self._dernier_deplacement_raquette = maintenant
-        direction = int("Right" in self._touches_raquette) - int(
-            "Left" in self._touches_raquette
-        )
+        direction = int("Right" in self._touches_raquette) - int("Left" in self._touches_raquette)
         if direction:
             self.deplacer_raquette(
                 direction * self.vitesse_raquette * delta_temps
@@ -269,11 +269,8 @@ class Partie:
             self.vitesse_raquette += self.AUGMENTATION_VITESSE_RAQUETTE
             self.augmenter_vitesse_balle()
         if not self.briques:
-            if self.duree == "infini":
-                self.creer_briques()
-            else:
-                self.animation.arreter()
-                self.afficher_victoire()
+            self.animation.arreter()
+            self.afficher_victoire()
 
     def augmenter_vitesse_balle(self) -> None:
         """Augmente la vitesse de la balle en conservant sa direction."""
