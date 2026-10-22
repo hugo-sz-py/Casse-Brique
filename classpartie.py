@@ -5,7 +5,7 @@ Type de fichier : Fichier classe partie
 Date : 08/10/2026
 Auteur : Constantin QUESSARD
 Reste à faire : TOUT
-"""
+""" 
 
 import time
 import tkinter as tk
