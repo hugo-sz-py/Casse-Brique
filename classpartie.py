@@ -31,7 +31,7 @@ class Partie:
 
     def __init__(
         self,
-        fenetre: tk.Toplevel,
+        fenetre: tk.Frame,
         application,
         score_label: tk.Label,
         vies_label: tk.Label,
@@ -39,13 +39,13 @@ class Partie:
         duree: str = "normal",
         difficulte: str = "facile",
     ) -> None:
-        """Initialise une partie dans une fenêtre Tkinter existante.
+        """Initialise une partie dans un cadre Tkinter existant.
 
         Crée le terrain et les briques, créé la balle et son animation,
         puis démarre le déplacement.
 
         Args:
-            fenetre: fenêtre Tkinter dans laquelle afficher la partie.
+            fenetre: cadre Tkinter dans lequel afficher la partie.
             application: application principale, utilisée pour relancer une partie.
 
         Returns:
@@ -122,7 +122,6 @@ class Partie:
             self.perdre_vie,
             self.ajouter_point,
         )
-        self.fenetre.protocol("WM_DELETE_WINDOW", self.fermer)
         self.animation.demarrer()
         self._demarrer_animation_raquette()
 
@@ -150,7 +149,7 @@ class Partie:
         self._touches_raquette.clear()
         self._arreter_animation_raquette()
 
-        fenetre_pause = tk.Toplevel(self.fenetre)
+        fenetre_pause = tk.Toplevel(self.fenetre.winfo_toplevel())
         fenetre_pause.title("Pause")
         fenetre_pause.geometry("260x130")
 
@@ -310,10 +309,11 @@ class Partie:
             None.
         """
         self.terminee = True
-        fenetre_fin = tk.Toplevel(self.fenetre)
+        fenetre_principale = self.fenetre.winfo_toplevel()
+        fenetre_fin = tk.Toplevel(fenetre_principale)
         fenetre_fin.title("Fin de partie")
         fenetre_fin.geometry("300x140")
-        fenetre_fin.transient(self.fenetre)
+        fenetre_fin.transient(fenetre_principale)
         fenetre_fin.resizable(False, False)
 
         
@@ -352,10 +352,11 @@ class Partie:
                 None.
             """
             self.terminee = True
-            fenetre_fin = tk.Toplevel(self.fenetre)
+            fenetre_principale = self.fenetre.winfo_toplevel()
+            fenetre_fin = tk.Toplevel(fenetre_principale)
             fenetre_fin.title("Victoire")
             fenetre_fin.geometry("300x140")
-            fenetre_fin.transient(self.fenetre)
+            fenetre_fin.transient(fenetre_principale)
             fenetre_fin.resizable(False, False)
         
             tk.Label(
@@ -416,4 +417,4 @@ class Partie:
         self._arreter_animation_raquette()
         self.animation.arreter()
         if self.fenetre.winfo_exists():
-            self.fenetre.destroy()
+            self.application.revenir()

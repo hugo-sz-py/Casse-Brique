@@ -10,9 +10,9 @@ To do :
 """
 
 
-class Pile :
+class Pile:
     """
-    Classe représentant une file
+    Classe représentant une pile
     
     Attribut :
         - pile : liste, contenant les éléments de la pile
@@ -33,16 +33,14 @@ class Pile :
         """
         self.pile = []
 
-    def empiler(self, liste):
+    def empiler(self, element):
         """
-        Ajoute un élément ou une liste d'éléments au sommet de la pile.
+        Ajoute un élément au sommet de la pile.
 
-        :param element: élément ou liste d'éléments à ajouter à la pile
+        :param element: élément à ajouter à la pile
         :return: None
         """
-
-        for element in liste:
-            self.pile.insert(0, element)
+        self.pile.insert(0, element)
 
     def depiler(self):
         """
