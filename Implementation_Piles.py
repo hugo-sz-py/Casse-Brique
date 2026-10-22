@@ -1,16 +1,8 @@
-"""
-Implementation des piles en POO
-
-08/10/2026
-
-SAEZ Hugo
-
-To do :
-
-"""
+"""Implémentation d'une pile LIFO à l'aide d'une liste Python."""
 
 
 class Pile:
+<<<<<<< HEAD
     """
     Classe représentant une pile
     
@@ -23,60 +15,75 @@ class Pile:
         - sommet() : retourne l'élément au sommet de la pile sans le retirer
         - est_vide() : retourne True si la pile est vide, sinon False
         - taille() : retourne le nombre d'éléments dans la pile
+=======
+    """Structure LIFO (dernier entré, premier sorti).
+
+    Le sommet est conservé à l'indice ``0`` de ``pile``. Chaque appel à
+    ``empiler`` place un seul objet au sommet.
+>>>>>>> b365c16a828ac35f527615d47872276b41a6abe6
     """
 
     def __init__(self):
-        """
-        Initialise une pile vide.
-
-        :return: None
-        """
+        """Crée une pile vide."""
         self.pile = []
 
     def empiler(self, element):
+<<<<<<< HEAD
         """
         Ajoute un élément au sommet de la pile.
 
         :param element: élément à ajouter à la pile
         :return: None
+=======
+        """Place un élément au sommet de la pile.
+
+        Args:
+            element: objet à placer au sommet.
+
+        Returns:
+            None.
+>>>>>>> b365c16a828ac35f527615d47872276b41a6abe6
         """
         self.pile.insert(0, element)
 
     def depiler(self):
-        """
-        Retire et retourne l'élément au sommet de la pile. Donne une erreur de type IndexError
-        si la pile est vide.
+        """Retire et retourne l'élément au sommet de la pile.
 
-        :return: élément au sommet de la pile
+        Returns:
+            Élément situé au sommet.
+
+        Raises:
+            IndexError: si la pile est vide.
         """
         if self.est_vide():
             raise IndexError("La pile est vide")
         return self.pile.pop(0)
 
     def sommet(self):
-        """
-        Retourne l'élément sommet de la pile sans le retirer. Donne une erreur de type IndexError
-        si la pile est vide.
+        """Retourne l'élément au sommet sans le retirer.
 
-        :return: élément en tête de la pile
-        """
+        Returns:
+            Élément situé au sommet.
 
+        Raises:
+            IndexError: si la pile est vide.
+        """
         if self.est_vide():
             raise IndexError("La pile est vide")
         return self.pile[0]
 
     def est_vide(self):
-        """
-        Retourne True si la pile est vide, sinon False.
+        """Indique si la pile ne contient aucun élément.
 
-        :return: bool, True si la pile est vide, sinon False
+        Returns:
+            ``True`` si la pile est vide, sinon ``False``.
         """
         return len(self.pile) == 0
 
     def taille(self):
-        """
-        Retourne le nombre d'éléments dans la pile.
+        """Compte les éléments actuellement dans la pile.
 
-        :return: int, nombre d'élements dans la pile
+        Returns:
+            Nombre d'éléments de la pile.
         """
         return len(self.pile)

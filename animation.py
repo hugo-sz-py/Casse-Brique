@@ -1,6 +1,9 @@
+"""Boucle d'animation et collisions de la balle."""
+
 import tkinter as tk
 from collections.abc import Callable
 import math
+
 from Balle import Balle
 
 
@@ -14,6 +17,7 @@ class AnimationBalle:
         largeur: largeur du terrain, en pixels.
         hauteur: hauteur du terrain, en pixels.
         perdre_vie: fonction appelée quand la balle est perdue.
+        ajouter_point: fonction appelée lorsqu'une brique est détruite.
         delai: délai entre deux déplacements, en millisecondes.
         animation_id: identifiant du prochain déplacement programmé, ou None.
         arretee: indique si l'animation est arrêtée.
