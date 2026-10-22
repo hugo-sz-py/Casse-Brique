@@ -7,6 +7,7 @@ Auteur : Constantin QUESSARD
 Reste à faire : TOUT
 """
 
+import time
 import tkinter as tk
 from Brique import Brique
 from Balle import Balle
@@ -23,6 +24,8 @@ class Partie:
 
     LARGEUR = 700
     HAUTEUR = 460
+    VITESSE_RAQUETTE = 300
+    DELAI_RAQUETTE = 16
 
     def __init__(
         self,
@@ -61,8 +64,13 @@ class Partie:
         )
         self.raquette.dessin()
         self.raquette_id = self.terrain.find_all()[-1]
-        self.terrain.bind("<Left>", self.deplacer_raquette_gauche)
-        self.terrain.bind("<Right>", self.deplacer_raquette_droite)
+        self._touches_raquette: set[str] = set() #Memorise les fleches actuellement enfoncées
+        self._dernier_deplacement_raquette = time.perf_counter() #Enregistre le time de début
+        self._deplacement_raquette_id: str | None = None
+        self.terrain.bind("<KeyPress>", self._touche_raquette_enfoncee)
+        self.terrain.bind("<KeyRelease>", self._touche_raquette_relachee)
+        #Permet de reinitialiser les touches si il y a un changement de fenetre
+        self.terrain.bind("<FocusOut>", self._reinitialiser_touches_raquette) 
         self.terrain.focus_set()
 
         self.briques = []
@@ -83,25 +91,13 @@ class Partie:
             for j in range(nb_colonnes):
                 x1 = marge_x + j * (largeur_brique + ecart)
                 y1 = marge_y + i * (hauteur_brique + ecart)
-                brique = Brique(
-                    self.terrain,
-                    x1,
-                    y1,
-                    largeur_brique,
-                    hauteur_brique,
-                    "red",
-                    1,
-                )
+                brique = Brique(self.terrain, x1, y1, largeur_brique, hauteur_brique, "red", 1)
                 brique.dessin()
                 self.objets_briques.append(brique)
                 # L'animation utilise les identifiants du canvas pour détecter les collisions.
                 self.briques.append(self.terrain.find_all()[-1])
     
-        self.balle = Balle(
-            self.terrain,
-            self.LARGEUR / 2,
-            self.HAUTEUR / 1.10,
-        )
+        self.balle = Balle(self.terrain, self.LARGEUR / 2, self.HAUTEUR / 1.10)
         self.animation = AnimationBalle(
             self.terrain,
             self.balle,
@@ -110,10 +106,12 @@ class Partie:
             self.LARGEUR,
             self.HAUTEUR,
             self.perdre_vie,
-            self.ajouter_point,
+            self.ajouter_point
         )
         self.fenetre.protocol("WM_DELETE_WINDOW", self.fermer)
         self.animation.demarrer()
+        #Attend de "DELAI_RAQUETTE" avant de faire "_animer_raquette"
+        self._deplacement_raquette_id = self.terrain.after(self.DELAI_RAQUETTE, self._animer_raquette)
 
     def deplacer_raquette(self, distance: float) -> None:
         """Déplace horizontalement la raquette sans la faire sortir du terrain.
@@ -125,32 +123,42 @@ class Partie:
         Returns:
             None.
         """
-        x1, _, x2, _ = self.terrain.coords(self.raquette_id)
+        x1, _, _, _ = self.terrain.coords(self.raquette_id)
         nouveau_x1 = max(3, min(x1 + distance, self.LARGEUR - 3 - self.raquette.largeur))
         self.terrain.move(self.raquette_id, nouveau_x1 - x1, 0)
         self.raquette.x = nouveau_x1
 
-    def deplacer_raquette_gauche(self, event: tk.Event) -> None:
-        """Déplace la raquette vers la gauche à la pression de la flèche gauche.
+    def _touche_raquette_enfoncee(self, event: tk.Event) -> None:
+        if not self.terminee and event.keysym in ("Left", "Right"):
+            self._touches_raquette.add(event.keysym)
 
-        Args:
-            event: événement clavier Tkinter associé à la pression de la touche.
+    def _touche_raquette_relachee(self, event: tk.Event) -> None:
+        self._touches_raquette.discard(event.keysym)
 
-        Returns:
-            None.
-        """
-        self.deplacer_raquette(-25)
+    def _reinitialiser_touches_raquette(self, event: tk.Event) -> None:
+        if event.widget == self.terrain:
+            self._touches_raquette.clear()
 
-    def deplacer_raquette_droite(self, event: tk.Event) -> None:
-        """Déplace la raquette vers la droite à la pression de la flèche droite.
+    def _animer_raquette(self) -> None:
+        self._deplacement_raquette_id = None
+        if self.terminee:
+            return
 
-        Args:
-            event: événement clavier Tkinter associé à la pression de la touche.
+        maintenant = time.perf_counter()
+        delta_temps = min(maintenant - self._dernier_deplacement_raquette, 0.05)
+        self._dernier_deplacement_raquette = maintenant
+        direction = int("Right" in self._touches_raquette) - int(
+            "Left" in self._touches_raquette
+        )
+        if direction:
+            self.deplacer_raquette(
+                direction * self.VITESSE_RAQUETTE * delta_temps
+            )
 
-        Returns:
-            None.
-        """
-        self.deplacer_raquette(25)
+        self._deplacement_raquette_id = self.terrain.after(
+            self.DELAI_RAQUETTE,
+            self._animer_raquette,
+        )
 
     def ajouter_point(self) -> None:
         self.score += 1
@@ -297,6 +305,13 @@ class Partie:
             None.
         """
         self.terminee = True
+        self._touches_raquette.clear()
+        if (
+            self._deplacement_raquette_id is not None
+            and self.terrain.winfo_exists()
+        ):
+            self.terrain.after_cancel(self._deplacement_raquette_id)
+            self._deplacement_raquette_id = None
         self.animation.arreter()
         if self.fenetre.winfo_exists():
             self.fenetre.destroy()
