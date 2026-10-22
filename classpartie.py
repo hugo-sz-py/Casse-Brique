@@ -30,6 +30,8 @@ class Partie:
         application,
         score_label: tk.Label,
         vies_label: tk.Label,
+        duree: str = "normal",
+        difficulte: str = "facile",
     ) -> None:
         """Initialise une partie dans une fenêtre Tkinter existante.
 
@@ -45,7 +47,10 @@ class Partie:
         """
         self.fenetre = fenetre
         self.application = application
+        self.duree = duree
+        self.difficulte = difficulte
         self.terminee = False
+        self.en_pause = False
         self.terrain = tk.Canvas(fenetre, width=self.LARGEUR, height=self.HAUTEUR, bg="black", highlightthickness=0,)
         self.terrain.place(relx=0.5, y=65, anchor="n")
         self.terrain.create_rectangle( 2,     2,     self.LARGEUR - 2,     self.HAUTEUR - 2,     outline="green",     width=3,)
@@ -63,10 +68,14 @@ class Partie:
         self.raquette_id = self.terrain.find_all()[-1]
         self.terrain.bind("<Left>", self.deplacer_raquette_gauche)
         self.terrain.bind("<Right>", self.deplacer_raquette_droite)
+        self.terrain.bind(
+            "<Escape>",
+            lambda event: self.ouvrir_menu_pause(),
+        )
         self.terrain.focus_set()
 
-        self.briques = []
-        self.objets_briques = []
+        self.briques: list[int] = []
+        self.objets_briques: list[Brique] = []
         largeur_brique = 100
         hauteur_brique = 30
         nb_colonnes = 5
@@ -76,27 +85,19 @@ class Partie:
         ecart = 20
         self.score = 0
         self.score_label = score_label
-        self.vies = 3
+        self.vies = 1 if self.difficulte == "hardcore" else 3
         self.vies_label = vies_label
+        self.vies_label.config(text=f"Vies : {self.vies}")
 
-        for i in range(nb_lignes):
-            for j in range(nb_colonnes):
-                x1 = marge_x + j * (largeur_brique + ecart)
-                y1 = marge_y + i * (hauteur_brique + ecart)
-                brique = Brique(
-                    self.terrain,
-                    x1,
-                    y1,
-                    largeur_brique,
-                    hauteur_brique,
-                    "red",
-                    1,
-                )
-                brique.dessin()
-                self.objets_briques.append(brique)
-                # L'animation utilise les identifiants du canvas pour détecter les collisions.
-                self.briques.append(self.terrain.find_all()[-1])
-    
+        self.largeur_brique = largeur_brique
+        self.hauteur_brique = hauteur_brique
+        self.nb_colonnes = nb_colonnes
+        self.nb_lignes = nb_lignes
+        self.marge_x = marge_x
+        self.marge_y = marge_y
+        self.ecart = ecart
+        self.creer_briques()
+
         self.balle = Balle(
             self.terrain,
             self.LARGEUR / 2,
@@ -114,6 +115,57 @@ class Partie:
         )
         self.fenetre.protocol("WM_DELETE_WINDOW", self.fermer)
         self.animation.demarrer()
+
+    def creer_briques(self) -> None:
+        """Dessine une nouvelle rangée complète de briques."""
+        self.briques.clear()
+        self.objets_briques.clear()
+        for i in range(self.nb_lignes):
+            for j in range(self.nb_colonnes):
+                x1 = self.marge_x + j * (self.largeur_brique + self.ecart)
+                y1 = self.marge_y + i * (self.hauteur_brique + self.ecart)
+                brique = Brique(
+                    self.terrain,
+                    x1,
+                    y1,
+                    self.largeur_brique,
+                    self.hauteur_brique,
+                    "red",
+                    1,
+                )
+                brique.dessin()
+                self.objets_briques.append(brique)
+                # L'animation utilise les identifiants du canvas pour détecter les collisions.
+                self.briques.append(self.terrain.find_all()[-1])
+
+    def ouvrir_menu_pause(self) -> None:
+        """Met la partie en pause et affiche les options de pause."""
+        if self.terminee or self.en_pause:
+            return
+
+        self.en_pause = True
+        self.animation.arreter()
+
+        fenetre_pause = tk.Toplevel(self.fenetre)
+        fenetre_pause.title("Pause")
+        fenetre_pause.geometry("260x130")
+
+        def reprendre() -> None:
+            fenetre_pause.destroy()
+            self.en_pause = False
+            if not self.terminee:
+                self.animation.demarrer()
+                self.terrain.focus_set()
+
+        def quitter() -> None:
+            fenetre_pause.destroy()
+            self.fermer()
+
+        tk.Label(fenetre_pause, text="Jeu en pause", font=("Arial", 16)).pack(pady=15)
+        tk.Button(fenetre_pause, text="Reprendre", command=reprendre).pack(side="left", expand=True)
+        tk.Button(fenetre_pause, text="Quitter", command=quitter).pack(side="right", expand=True)
+        fenetre_pause.protocol("WM_DELETE_WINDOW", reprendre)
+        fenetre_pause.grab_set()
 
     def deplacer_raquette(self, distance: float) -> None:
         """Déplace horizontalement la raquette sans la faire sortir du terrain.
@@ -155,9 +207,23 @@ class Partie:
     def ajouter_point(self) -> None:
         self.score += 1
         self.score_label.config(text=f"Score : {self.score}")
+        if self.difficulte in ("difficile", "hardcore"):
+            self.augmenter_vitesse_balle()
         if not self.briques:
-            self.animation.arreter()
-            self.afficher_victoire()
+            if self.duree == "infini":
+                self.creer_briques()
+            else:
+                self.animation.arreter()
+                self.afficher_victoire()
+
+    def augmenter_vitesse_balle(self) -> None:
+        """Augmente la vitesse de la balle en conservant sa direction."""
+        vitesse = (self.balle.dx**2 + self.balle.dy**2) ** 0.5
+        vitesse_max = 12
+        nouvelle_vitesse = min(vitesse + 0.5, vitesse_max)
+        facteur = nouvelle_vitesse / vitesse
+        self.balle.dx *= facteur
+        self.balle.dy *= facteur
 
     def perdre_vie(self) -> None:
         """Retire une vie et replace la balle, ou termine la partie à zéro.
