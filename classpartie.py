@@ -25,6 +25,8 @@ class Partie:
     LARGEUR = 700
     HAUTEUR = 460
     VITESSE_RAQUETTE = 300
+    AUGMENTATION_VITESSE_RAQUETTE = 20
+    AUGMENTATION_VITESSE_BALLE = 0.5
     DELAI_RAQUETTE = 16
 
     def __init__(
@@ -33,6 +35,7 @@ class Partie:
         application,
         score_label: tk.Label,
         vies_label: tk.Label,
+        meilleur_score_label: tk.Label | None = None,
         duree: str = "normal",
         difficulte: str = "facile",
     ) -> None:
@@ -50,10 +53,15 @@ class Partie:
         """
         self.fenetre = fenetre
         self.application = application
+        self.meilleur_score_label = meilleur_score_label
         self.duree = duree
         self.difficulte = difficulte
+        self.vitesse_raquette = self.VITESSE_RAQUETTE
         self.terminee = False
         self.en_pause = False
+        self._touches_raquette: set[str] = set()
+        self._dernier_deplacement_raquette = time.perf_counter()
+        self._deplacement_raquette_id: str | None = None
         self.terrain = tk.Canvas(fenetre, width=self.LARGEUR, height=self.HAUTEUR, bg="black", highlightthickness=0,)
         self.terrain.place(relx=0.5, y=65, anchor="n")
         self.terrain.create_rectangle( 2,     2,     self.LARGEUR - 2,     self.HAUTEUR - 2,     outline="green",     width=3,)
@@ -69,12 +77,9 @@ class Partie:
         )
         self.raquette.dessin()
         self.raquette_id = self.terrain.find_all()[-1]
-        self.terrain.bind("<Left>", self.deplacer_raquette_gauche)
-        self.terrain.bind("<Right>", self.deplacer_raquette_droite)
-        self.terrain.bind(
-            "<Escape>",
-            lambda event: self.ouvrir_menu_pause(),
-        )
+        self.terrain.bind("<KeyPress>", self._touche_raquette_enfoncee)
+        self.terrain.bind("<KeyRelease>", self._touche_raquette_relachee)
+        self.terrain.bind("<FocusOut>", self._reinitialiser_touches_raquette)
         self.terrain.focus_set()
 
         self.briques: list[int] = []
@@ -90,25 +95,17 @@ class Partie:
         self.score_label = score_label
         self.vies = 1 if self.difficulte == "hardcore" else 3
         self.vies_label = vies_label
+        self.vies_label.config(text=f"Vies : {self.vies}")
 
-        for i in range(nb_lignes):
-            for j in range(nb_colonnes):
-                x1 = marge_x + j * (largeur_brique + ecart)
-                y1 = marge_y + i * (hauteur_brique + ecart)
-                brique = Brique(
-                    self.terrain,
-                    x1,
-                    y1,
-                    largeur_brique,
-                    hauteur_brique,
-                    "red",
-                    1,
-                )
-                brique.dessin()
-                self.objets_briques.append(brique)
-                # L'animation utilise les identifiants du canvas pour détecter les collisions.
-                self.briques.append(self.terrain.find_all()[-1])
-    
+        self.largeur_brique = largeur_brique
+        self.hauteur_brique = hauteur_brique
+        self.nb_colonnes = nb_colonnes
+        self.nb_lignes = nb_lignes
+        self.marge_x = marge_x
+        self.marge_y = marge_y
+        self.ecart = ecart
+        self.creer_briques()
+
         self.balle = Balle(
             self.terrain,
             self.LARGEUR / 2,
@@ -122,12 +119,11 @@ class Partie:
             self.LARGEUR,
             self.HAUTEUR,
             self.perdre_vie,
-            self.ajouter_point
+            self.ajouter_point,
         )
         self.fenetre.protocol("WM_DELETE_WINDOW", self.fermer)
         self.animation.demarrer()
-        #Attend de "DELAI_RAQUETTE" avant de faire "_animer_raquette"
-        self._deplacement_raquette_id = self.terrain.after(self.DELAI_RAQUETTE, self._animer_raquette)
+        self._demarrer_animation_raquette()
 
     def creer_briques(self) -> None:
         """Dessine une nouvelle rangée complète de briques."""
@@ -158,6 +154,8 @@ class Partie:
 
         self.en_pause = True
         self.animation.arreter()
+        self._touches_raquette.clear()
+        self._arreter_animation_raquette()
 
         fenetre_pause = tk.Toplevel(self.fenetre)
         fenetre_pause.title("Pause")
@@ -168,6 +166,7 @@ class Partie:
             self.en_pause = False
             if not self.terminee:
                 self.animation.demarrer()
+                self._demarrer_animation_raquette()
                 self.terrain.focus_set()
 
         def quitter() -> None:
@@ -190,12 +189,15 @@ class Partie:
         Returns:
             None.
         """
-        x1, _, _, _ = self.terrain.coords(self.raquette_id)
+        x1, _, x2, _ = self.terrain.coords(self.raquette_id)
         nouveau_x1 = max(3, min(x1 + distance, self.LARGEUR - 3 - self.raquette.largeur))
         self.terrain.move(self.raquette_id, nouveau_x1 - x1, 0)
         self.raquette.x = nouveau_x1
 
     def _touche_raquette_enfoncee(self, event: tk.Event) -> None:
+        if event.keysym == "Escape":
+            self.ouvrir_menu_pause()
+            return
         if not self.terminee and event.keysym in ("Left", "Right"):
             self._touches_raquette.add(event.keysym)
 
@@ -206,9 +208,25 @@ class Partie:
         if event.widget == self.terrain:
             self._touches_raquette.clear()
 
+    def _demarrer_animation_raquette(self) -> None:
+        if self._deplacement_raquette_id is None and not self.terminee:
+            self._dernier_deplacement_raquette = time.perf_counter()
+            self._deplacement_raquette_id = self.terrain.after(
+                self.DELAI_RAQUETTE,
+                self._animer_raquette,
+            )
+
+    def _arreter_animation_raquette(self) -> None:
+        if (
+            self._deplacement_raquette_id is not None
+            and self.terrain.winfo_exists()
+        ):
+            self.terrain.after_cancel(self._deplacement_raquette_id)
+            self._deplacement_raquette_id = None
+
     def _animer_raquette(self) -> None:
         self._deplacement_raquette_id = None
-        if self.terminee:
+        if self.terminee or self.en_pause:
             return
 
         maintenant = time.perf_counter()
@@ -219,7 +237,7 @@ class Partie:
         )
         if direction:
             self.deplacer_raquette(
-                direction * self.VITESSE_RAQUETTE * delta_temps
+                direction * self.vitesse_raquette * delta_temps
             )
 
         self._deplacement_raquette_id = self.terrain.after(
@@ -230,7 +248,25 @@ class Partie:
     def ajouter_point(self) -> None:
         self.score += 1
         self.score_label.config(text=f"Score : {self.score}")
+        meilleur_score = self.application.enregistrer_score(
+            self.score,
+            self.difficulte,
+            self.duree,
+        )
+        if self.meilleur_score_label is not None:
+            if self.difficulte in self.application.FICHIERS_MEILLEURS_SCORES:
+                valeur = (
+                    str(meilleur_score)
+                    if meilleur_score is not None
+                    else "indisponible"
+                )
+            else:
+                valeur = "non suivi"
+            self.meilleur_score_label.config(
+                text=f"Meilleur {self.difficulte} : {valeur}"
+            )
         if self.difficulte in ("difficile", "hardcore"):
+            self.vitesse_raquette += self.AUGMENTATION_VITESSE_RAQUETTE
             self.augmenter_vitesse_balle()
         if not self.briques:
             if self.duree == "infini":
@@ -242,8 +278,7 @@ class Partie:
     def augmenter_vitesse_balle(self) -> None:
         """Augmente la vitesse de la balle en conservant sa direction."""
         vitesse = (self.balle.dx**2 + self.balle.dy**2) ** 0.5
-        vitesse_max = 12
-        nouvelle_vitesse = min(vitesse + 0.5, vitesse_max)
+        nouvelle_vitesse = vitesse + self.AUGMENTATION_VITESSE_BALLE
         facteur = nouvelle_vitesse / vitesse
         self.balle.dx *= facteur
         self.balle.dy *= facteur
@@ -387,12 +422,7 @@ class Partie:
         """
         self.terminee = True
         self._touches_raquette.clear()
-        if (
-            self._deplacement_raquette_id is not None
-            and self.terrain.winfo_exists()
-        ):
-            self.terrain.after_cancel(self._deplacement_raquette_id)
-            self._deplacement_raquette_id = None
+        self._arreter_animation_raquette()
         self.animation.arreter()
         if self.fenetre.winfo_exists():
             self.fenetre.destroy()
