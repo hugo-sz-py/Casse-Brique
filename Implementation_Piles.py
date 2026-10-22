@@ -2,7 +2,6 @@
 
 
 class Pile:
-<<<<<<< HEAD
     """
     Classe représentant une pile
     
@@ -15,12 +14,6 @@ class Pile:
         - sommet() : retourne l'élément au sommet de la pile sans le retirer
         - est_vide() : retourne True si la pile est vide, sinon False
         - taille() : retourne le nombre d'éléments dans la pile
-=======
-    """Structure LIFO (dernier entré, premier sorti).
-
-    Le sommet est conservé à l'indice ``0`` de ``pile``. Chaque appel à
-    ``empiler`` place un seul objet au sommet.
->>>>>>> b365c16a828ac35f527615d47872276b41a6abe6
     """
 
     def __init__(self):
@@ -28,13 +21,6 @@ class Pile:
         self.pile = []
 
     def empiler(self, element):
-<<<<<<< HEAD
-        """
-        Ajoute un élément au sommet de la pile.
-
-        :param element: élément à ajouter à la pile
-        :return: None
-=======
         """Place un élément au sommet de la pile.
 
         Args:
@@ -42,7 +28,6 @@ class Pile:
 
         Returns:
             None.
->>>>>>> b365c16a828ac35f527615d47872276b41a6abe6
         """
         self.pile.insert(0, element)
 
