@@ -1,3 +1,5 @@
+"""Définition de la balle et de sa géométrie sur un canvas Tkinter."""
+
 import math
 import random
 import tkinter as tk
@@ -18,6 +20,10 @@ class Balle:
         dx: déplacement horizontal à chaque pas d'animation.
         dy: déplacement vertical à chaque pas d'animation.
         identifiant: identifiant de l'ovale créé sur le canvas.
+
+    Convention:
+        Les coordonnées du canvas augmentent vers la droite et vers le bas.
+        Une valeur positive de ``dy`` déplace donc la balle vers le bas.
     """
 
     RAYON = 15
@@ -50,7 +56,7 @@ class Balle:
             self.y - self.rayon,
             self.x + self.rayon,
             self.y + self.rayon,
-            outline="green",
+            outline="#42E6C2",
             fill="white",
         )
 

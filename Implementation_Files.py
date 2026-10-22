@@ -1,88 +1,67 @@
-"""
-Implementation des files en POO
+"""Implémentation d'une file FIFO à l'aide d'une liste Python."""
 
-08/10/2026
 
-SAEZ Hugo
+class File:
+    """Structure FIFO (premier entré, premier sorti).
 
-To do :
-
-"""
-
-class File :
+    Les éléments sont stockés dans ``file`` du plus ancien au plus récent.
+    Chaque appel à ``enfiler`` ajoute un seul objet, qui peut lui-même être
+    une liste ou un autre conteneur.
     """
-    Classe représentant une file
-
-    Attribut :
-        - file : liste, contenant les éléments de la file
-
-    Méthodes :
-        - enfiler(element) : ajoute un élément à la fin de la file
-        - defiler() : retire et retourne l'élément en tête de la file
-        - premier() : retourne l'élément en tête de la file sans le retirer
-        - est_vide() : retourne True si la file est vide, sinon False
-        - taille() : retourne le nombre d'éléments dans la file
-    """
-
 
     def __init__(self):
-        """
-        Initialise une file vide.
-        
-        :return: None
-        """
+        """Crée une file vide."""
         self.file = []
 
+    def enfiler(self, element):
+        """Ajoute un élément à la fin de la file.
 
-    def enfiler(self, liste):
+        Args:
+            element: objet à placer dans la file.
+
+        Returns:
+            None.
         """
-        Ajoute un élément ou une liste d'éléments à la fin de la file.
-        
-        :param element: élément ou liste d'éléments à ajouter à la file
-        :return: None
-        """
-
-        for element in liste :
-           self.file.append(element)
-
+        self.file.append(element)
 
     def defiler(self):
-        """
-        Retire et retourne l'élément en tête de la file. Donne une erreur de type IndexError 
-        si la file est vide.
+        """Retire et retourne l'élément le plus ancien.
 
-        :return: élément en tête de la file
+        Returns:
+            Élément placé en tête de file.
+
+        Raises:
+            IndexError: si la file est vide.
         """
         if self.est_vide():
             raise IndexError("La file est vide")
         return self.file.pop(0)
 
+    def premier(self):
+        """Retourne l'élément le plus ancien sans le retirer.
 
-    def premier(self): 
+        Returns:
+            Élément placé en tête de file.
+
+        Raises:
+            IndexError: si la file est vide.
         """
-        Retourne l'élément en tête de la file sans le retirer. Donne une erreur de type IndexError
-        si la file est vide.
-
-        :return: élément en tête de la file
-        """
-
-        if self.est_vide() :
+        if self.est_vide():
             raise IndexError("La file est vide")
         return self.file[0]
 
-    
     def est_vide(self):
+        """Indique si la file ne contient aucun élément.
+
+        Returns:
+            ``True`` si la file est vide, sinon ``False``.
         """
-        Retourne True si la file est vide, sinon False.
-        
-        :return: bool, True si la file est vide, sinon False"""
         return len(self.file) == 0
 
-
     def taille(self):
-        """
-        Retourne le nombre d'éléments dans la file.
-        
-        :return: int, nombre d'élements dans la file
+        """Compte les éléments actuellement dans la file.
+
+        Returns:
+            Nombre d'éléments de la file.
         """
         return len(self.file)
