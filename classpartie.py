@@ -97,7 +97,7 @@ class Partie:
         ecart = 20
         self.score = 0
         self.score_label = score_label
-        self.vies = 3
+        self.vies = 1 if self.difficulte == "hardcore" else 3
         self.vies_label = vies_label
         self.vies_label.config(text=f"Vies : {self.vies}")
 
@@ -110,16 +110,7 @@ class Partie:
         self.ecart = ecart
         self.creer_briques()
 
-        for i in range(nb_lignes):
-            for j in range(nb_colonnes):
-                x1 = marge_x + j * (largeur_brique + ecart)
-                y1 = marge_y + i * (hauteur_brique + ecart)
-                brique = Brique(self.terrain, x1, y1, largeur_brique, hauteur_brique, "red", 1)
-                brique.dessin()
-                self.objets_briques.append(brique)
-                # L'animation utilise les identifiants du canvas pour détecter les collisions.
-                self.briques.append(self.terrain.find_all()[-1])
-    
+
         self.balle = Balle(self.terrain, self.LARGEUR / 2, self.HAUTEUR / 1.10)
         self.animation = AnimationBalle(
             self.terrain,
@@ -269,8 +260,11 @@ class Partie:
             self.vitesse_raquette += self.AUGMENTATION_VITESSE_RAQUETTE
             self.augmenter_vitesse_balle()
         if not self.briques:
-            self.animation.arreter()
-            self.afficher_victoire()
+            if self.duree == "infini":
+                self.creer_briques()
+            else:
+                self.animation.arreter()
+                self.afficher_victoire()
 
     def augmenter_vitesse_balle(self) -> None:
         """Augmente la vitesse de la balle en conservant sa direction."""
