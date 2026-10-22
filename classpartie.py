@@ -7,6 +7,7 @@ Auteur : Constantin QUESSARD
 Reste à faire : TOUT
 """
 
+import time
 import tkinter as tk
 from Brique import Brique
 from Balle import Balle
@@ -23,6 +24,8 @@ class Partie:
 
     LARGEUR = 700
     HAUTEUR = 460
+    VITESSE_RAQUETTE = 300
+    DELAI_RAQUETTE = 16
 
     def __init__(
         self,
@@ -87,17 +90,25 @@ class Partie:
         self.score_label = score_label
         self.vies = 1 if self.difficulte == "hardcore" else 3
         self.vies_label = vies_label
-        self.vies_label.config(text=f"Vies : {self.vies}")
 
-        self.largeur_brique = largeur_brique
-        self.hauteur_brique = hauteur_brique
-        self.nb_colonnes = nb_colonnes
-        self.nb_lignes = nb_lignes
-        self.marge_x = marge_x
-        self.marge_y = marge_y
-        self.ecart = ecart
-        self.creer_briques()
-
+        for i in range(nb_lignes):
+            for j in range(nb_colonnes):
+                x1 = marge_x + j * (largeur_brique + ecart)
+                y1 = marge_y + i * (hauteur_brique + ecart)
+                brique = Brique(
+                    self.terrain,
+                    x1,
+                    y1,
+                    largeur_brique,
+                    hauteur_brique,
+                    "red",
+                    1,
+                )
+                brique.dessin()
+                self.objets_briques.append(brique)
+                # L'animation utilise les identifiants du canvas pour détecter les collisions.
+                self.briques.append(self.terrain.find_all()[-1])
+    
         self.balle = Balle(
             self.terrain,
             self.LARGEUR / 2,
@@ -111,10 +122,12 @@ class Partie:
             self.LARGEUR,
             self.HAUTEUR,
             self.perdre_vie,
-            self.ajouter_point,
+            self.ajouter_point
         )
         self.fenetre.protocol("WM_DELETE_WINDOW", self.fermer)
         self.animation.demarrer()
+        #Attend de "DELAI_RAQUETTE" avant de faire "_animer_raquette"
+        self._deplacement_raquette_id = self.terrain.after(self.DELAI_RAQUETTE, self._animer_raquette)
 
     def creer_briques(self) -> None:
         """Dessine une nouvelle rangée complète de briques."""
@@ -177,32 +190,42 @@ class Partie:
         Returns:
             None.
         """
-        x1, _, x2, _ = self.terrain.coords(self.raquette_id)
+        x1, _, _, _ = self.terrain.coords(self.raquette_id)
         nouveau_x1 = max(3, min(x1 + distance, self.LARGEUR - 3 - self.raquette.largeur))
         self.terrain.move(self.raquette_id, nouveau_x1 - x1, 0)
         self.raquette.x = nouveau_x1
 
-    def deplacer_raquette_gauche(self, event: tk.Event) -> None:
-        """Déplace la raquette vers la gauche à la pression de la flèche gauche.
+    def _touche_raquette_enfoncee(self, event: tk.Event) -> None:
+        if not self.terminee and event.keysym in ("Left", "Right"):
+            self._touches_raquette.add(event.keysym)
 
-        Args:
-            event: événement clavier Tkinter associé à la pression de la touche.
+    def _touche_raquette_relachee(self, event: tk.Event) -> None:
+        self._touches_raquette.discard(event.keysym)
 
-        Returns:
-            None.
-        """
-        self.deplacer_raquette(-25)
+    def _reinitialiser_touches_raquette(self, event: tk.Event) -> None:
+        if event.widget == self.terrain:
+            self._touches_raquette.clear()
 
-    def deplacer_raquette_droite(self, event: tk.Event) -> None:
-        """Déplace la raquette vers la droite à la pression de la flèche droite.
+    def _animer_raquette(self) -> None:
+        self._deplacement_raquette_id = None
+        if self.terminee:
+            return
 
-        Args:
-            event: événement clavier Tkinter associé à la pression de la touche.
+        maintenant = time.perf_counter()
+        delta_temps = min(maintenant - self._dernier_deplacement_raquette, 0.05)
+        self._dernier_deplacement_raquette = maintenant
+        direction = int("Right" in self._touches_raquette) - int(
+            "Left" in self._touches_raquette
+        )
+        if direction:
+            self.deplacer_raquette(
+                direction * self.VITESSE_RAQUETTE * delta_temps
+            )
 
-        Returns:
-            None.
-        """
-        self.deplacer_raquette(25)
+        self._deplacement_raquette_id = self.terrain.after(
+            self.DELAI_RAQUETTE,
+            self._animer_raquette,
+        )
 
     def ajouter_point(self) -> None:
         self.score += 1
@@ -363,6 +386,13 @@ class Partie:
             None.
         """
         self.terminee = True
+        self._touches_raquette.clear()
+        if (
+            self._deplacement_raquette_id is not None
+            and self.terrain.winfo_exists()
+        ):
+            self.terrain.after_cancel(self._deplacement_raquette_id)
+            self._deplacement_raquette_id = None
         self.animation.arreter()
         if self.fenetre.winfo_exists():
             self.fenetre.destroy()
