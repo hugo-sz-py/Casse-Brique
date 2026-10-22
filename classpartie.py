@@ -5,7 +5,7 @@ Type de fichier : Fichier classe partie
 Date : 08/10/2026
 Auteur : Constantin QUESSARD
 Reste à faire : TOUT
-""" 
+"""
 
 import time
 import tkinter as tk
@@ -69,16 +69,17 @@ class Partie:
         )
         self.raquette.dessin()
         self.raquette_id = self.terrain.find_all()[-1]
-        self.terrain.bind("<Left>", self.deplacer_raquette_gauche)
-        self.terrain.bind("<Right>", self.deplacer_raquette_droite)
-        self.terrain.bind(
-            "<Escape>",
-            lambda event: self.ouvrir_menu_pause(),
-        )
+        self._touches_raquette: set[str] = set() #Memorise les fleches actuellement enfoncées
+        self._dernier_deplacement_raquette = time.perf_counter() #Enregistre le time de début
+        self._deplacement_raquette_id: str | None = None
+        self.terrain.bind("<KeyPress>", self._touche_raquette_enfoncee)
+        self.terrain.bind("<KeyRelease>", self._touche_raquette_relachee)
+        #Permet de reinitialiser les touches si il y a un changement de fenetre
+        self.terrain.bind("<FocusOut>", self._reinitialiser_touches_raquette) 
         self.terrain.focus_set()
 
-        self.briques: list[int] = []
-        self.objets_briques: list[Brique] = []
+        self.briques = []
+        self.objets_briques = []
         largeur_brique = 100
         hauteur_brique = 30
         nb_colonnes = 5
@@ -88,32 +89,20 @@ class Partie:
         ecart = 20
         self.score = 0
         self.score_label = score_label
-        self.vies = 1 if self.difficulte == "hardcore" else 3
+        self.vies = 3
         self.vies_label = vies_label
 
         for i in range(nb_lignes):
             for j in range(nb_colonnes):
                 x1 = marge_x + j * (largeur_brique + ecart)
                 y1 = marge_y + i * (hauteur_brique + ecart)
-                brique = Brique(
-                    self.terrain,
-                    x1,
-                    y1,
-                    largeur_brique,
-                    hauteur_brique,
-                    "red",
-                    1,
-                )
+                brique = Brique(self.terrain, x1, y1, largeur_brique, hauteur_brique, "red", 1)
                 brique.dessin()
                 self.objets_briques.append(brique)
                 # L'animation utilise les identifiants du canvas pour détecter les collisions.
                 self.briques.append(self.terrain.find_all()[-1])
     
-        self.balle = Balle(
-            self.terrain,
-            self.LARGEUR / 2,
-            self.HAUTEUR / 1.10,
-        )
+        self.balle = Balle(self.terrain, self.LARGEUR / 2, self.HAUTEUR / 1.10)
         self.animation = AnimationBalle(
             self.terrain,
             self.balle,
@@ -233,11 +222,8 @@ class Partie:
         if self.difficulte in ("difficile", "hardcore"):
             self.augmenter_vitesse_balle()
         if not self.briques:
-            if self.duree == "infini":
-                self.creer_briques()
-            else:
-                self.animation.arreter()
-                self.afficher_victoire()
+            self.animation.arreter()
+            self.afficher_victoire()
 
     def augmenter_vitesse_balle(self) -> None:
         """Augmente la vitesse de la balle en conservant sa direction."""
