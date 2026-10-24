@@ -1,5 +1,15 @@
-"""Contrôleur d'une partie : terrain, commandes, score et cycle de vie."""
+"""
+Contrôleur d'une partie : terrain, commandes, score et cycle de vie
 
+08/10/2026
+
+SAEZ Hugo, QUESSARD Constantin
+
+To do :
+
+"""
+
+import math
 import time
 import tkinter as tk
 
@@ -11,22 +21,23 @@ from animation import AnimationBalle
 
 
 class Partie:
-    """Gère le terrain, les briques, la balle et la fin d'une partie.
+    """
+    Gère le terrain, les briques, la balle et la fin d'une partie
 
     Attributs de classe :
-        LARGEUR: largeur du terrain de jeu, en pixels.
-        HAUTEUR: hauteur du terrain de jeu, en pixels.
-        fenetre: fenêtre Tkinter hébergeant la partie.
-        terrain: canvas de jeu.
-        balle: balle en mouvement.
-        raquette: raquette contrôlée au clavier.
-        briques: identifiants des briques encore présentes sur le canvas.
-        score: nombre de briques détruites pendant la partie.
-        vies: nombre de vies restantes.
-        duree: mode de partie (``"normal"``, ``"infini"`` ou ``"niveaux"``).
+        LARGEUR: largeur du terrain de jeu, en pixels
+        HAUTEUR: hauteur du terrain de jeu, en pixels
+        fenetre: fenêtre Tkinter hébergeant la partie
+        terrain: canvas de jeu
+        balle: balle en mouvement
+        raquette: raquette contrôlée au clavier
+        briques: identifiants des briques encore présentes sur le canvas
+        score: nombre de briques détruites pendant la partie
+        vies: nombre de vies restantes
+        duree: mode de partie (``"normal"``, ``"infini"`` ou ``"niveaux"``)
         difficulte: niveau choisi (``"facile"``, ``"difficile"`` ou
-            ``"hardcore"``).
-        niveau_actuel: numéro du niveau en cours en mode niveaux.
+            ``"hardcore"``)
+        niveau_actuel: numéro du niveau en cours en mode niveaux
     """
 
     LARGEUR = 700
@@ -58,30 +69,28 @@ class Partie:
         meilleur_score_label: tk.Label | None = None,
         duree: str = "normal",
         difficulte: str = "facile",
-        niveau_label: tk.Label | None = None,
+        niveau_label: tk.Label | None = None
     ) -> None:
-        """Initialise une partie dans un cadre Tkinter existant.
+        """
+        Initialise une partie dans un cadre Tkinter existant
 
         Crée le terrain et les briques, créé la balle et son animation,
-        puis démarre le déplacement.
+        puis démarre le déplacement
 
         Args:
             fenetre: fenêtre Tkinter dans laquelle afficher la partie.
-            application: application principale, utilisée pour les records et
-                pour relancer une partie.
-            score_label: widget affichant le score courant.
-            vies_label: widget affichant le nombre de vies restantes.
-            meilleur_score_label: widget facultatif affichant le record.
-            duree: mode normal (victoire à la dernière brique) ou infini
-                (nouvelle grille après chaque série), ou niveaux (série de
-                grilles prédéfinies).
-            difficulte: niveau qui détermine notamment le nombre de vies et
-                l'évolution de la vitesse.
-            niveau_label: widget facultatif affichant la progression des
-                niveaux.
+            application: application principale, utilisée pour les records et pour relancer une partie
+            score_label: widget affichant le score courant
+            vies_label: widget affichant le nombre de vies restantes
+            meilleur_score_label: widget facultatif affichant le record
+            duree: mode normal (victoire à la dernière brique) ou infini 
+                   (nouvelle grille après chaque série), ou niveaux (série de
+                   grilles prédéfinies)
+            difficulte: niveau qui détermine le nombre de vies et l'évolution de la vitesse
+            niveau_label: widget affichant la progression des niveaux
 
         Returns:
-            None.
+            None
         """
         self.fenetre = fenetre
         self.application = application
@@ -106,12 +115,13 @@ class Partie:
             width=self.LARGEUR,
             height=self.HAUTEUR,
             bg=self.FOND,
-            highlightthickness=0,
+            highlightthickness=0
         )
+
         self.terrain.place(relx=0.5, y=65, anchor="n")
         self.terrain.create_rectangle(
             2, 2, self.LARGEUR - 2, self.HAUTEUR - 2,
-            outline=self.TURQUOISE, width=2,
+            outline=self.TURQUOISE, width=2
         )
 
         largeur_raquette = 150
@@ -121,8 +131,9 @@ class Partie:
             self.HAUTEUR - 35,
             largeur_raquette,
             15,
-            self.TURQUOISE,
+            self.TURQUOISE
         )
+
         self.raquette.dessin()
         self.raquette_id = self.terrain.find_all()[-1]
         self._touches_raquette: set[str] = set()
@@ -166,28 +177,35 @@ class Partie:
             self.LARGEUR,
             self.HAUTEUR,
             self.perdre_vie,
-            self.ajouter_point,
+            self.ajouter_point
         )
+
         self.animation.demarrer()
         self._demarrer_animation_raquette()
 
     def creer_briques(self) -> None:
-        """Remplace la grille suivie par une nouvelle rangée de briques.
-
-        Met à jour les listes ``briques`` (identifiants du canvas) et
-        ``objets_briques`` (instances métier) en même temps que le dessin.
         """
+        Remplace la grille suivie par une nouvelle rangée de briques
+
+        Met à jour les listes "briques" et
+        "objets_briques" en même temps que le dessin
+        """
+        # Vide les anciennes références avant de construire la nouvelle grille
         self.briques.clear()
         self.objets_briques.clear()
+        # En l'absence de motif de niveau, crée une grille entièrement remplie
         pattern = self.pattern_actuel or tuple(
             "1" * self.nb_colonnes for _ in range(self.nb_lignes)
         )
+        # Chaque chaîne représente une rangée : "1" dessine une brique, tandis que "0" laisse un espace
         for i, ligne in enumerate(pattern):
             for j, presence in enumerate(ligne):
                 if presence != "1":
                     continue
+                # Calcule la position à partir de la rangée et de la colonne
                 x1 = self.marge_x + j * (self.largeur_brique + self.ecart)
                 y1 = self.marge_y + i * (self.hauteur_brique + self.ecart)
+                # Alterne la couleur selon la rangée du motif
                 couleur = self.COULEURS_BRIQUES[i % len(self.COULEURS_BRIQUES)]
                 brique = Brique(
                     self.terrain,
@@ -196,19 +214,21 @@ class Partie:
                     self.largeur_brique,
                     self.hauteur_brique,
                     couleur,
-                    1,
+                    1
                 )
+
                 brique.dessin()
                 self.objets_briques.append(brique)
-                # L'animation utilise les identifiants du canvas pour détecter les collisions.
+                # L'animation utilise les identifiants du canvas pour détecter les collisions
                 self.briques.append(self.terrain.find_all()[-1])
 
     def _charger_niveau_suivant(self) -> bool:
-        """Retire le prochain motif de la file et actualise son indicateur.
+        """
+        Retire le prochain motif de la file et actualise son indicateur
 
         Returns:
-            ``True`` si un niveau a été chargé, sinon ``False`` si tous les
-            niveaux ont déjà été joués.
+            True si un niveau a été chargé, sinon False si tous les
+            niveaux ont déjà été joués
         """
         if self.niveaux_restants.est_vide():
             return False
@@ -222,9 +242,10 @@ class Partie:
         return True
 
     def ouvrir_menu_pause(self) -> None:
-        """Suspend les animations et ouvre les actions de pause.
+        """
+        Suspend les animations et ouvre les actions de pause
 
-        Aucun effet si la partie est déjà en pause ou terminée.
+        Aucun effet si la partie est déjà en pause ou terminée
         """
         if self.terminee or self.en_pause:
             return
@@ -241,7 +262,9 @@ class Partie:
         fenetre_pause.resizable(False, False)
 
         def reprendre() -> None:
-            """Ferme le menu de pause et relance les animations."""
+            """
+            Ferme le menu de pause et relance les animations
+            """
             fenetre_pause.destroy()
             self.en_pause = False
             if not self.terminee:
@@ -250,7 +273,9 @@ class Partie:
                 self.terrain.focus_set()
 
         def quitter() -> None:
-            """Ferme le menu de pause puis termine la fenêtre de jeu."""
+            """
+            Ferme le menu de pause puis termine la fenêtre de jeu
+            """
             fenetre_pause.destroy()
             self.fermer()
 
@@ -259,8 +284,9 @@ class Partie:
             text="PAUSE",
             bg=self.FOND,
             fg=self.TURQUOISE,
-            font=("Segoe UI", 18, "bold"),
+            font=("Segoe UI", 18, "bold")
         ).pack(pady=(20, 14))
+
         boutons = tk.Frame(fenetre_pause, bg=self.FOND)
         boutons.pack()
         tk.Button(
@@ -276,8 +302,9 @@ class Partie:
             bd=0,
             padx=15,
             pady=7,
-            cursor="hand2",
+            cursor="hand2"
         ).pack(side="left", padx=6)
+
         tk.Button(
             boutons,
             text="Quitter",
@@ -291,20 +318,22 @@ class Partie:
             bd=0,
             padx=15,
             pady=7,
-            cursor="hand2",
+            cursor="hand2"
         ).pack(side="left", padx=6)
+
         fenetre_pause.protocol("WM_DELETE_WINDOW", reprendre)
         fenetre_pause.grab_set()
 
     def deplacer_raquette(self, distance: float) -> None:
-        """Déplace horizontalement la raquette sans la faire sortir du terrain.
+        """
+        Déplace horizontalement la raquette sans la faire sortir du terrain
 
         Args:
             distance: déplacement demandé en pixels (négatif vers la gauche,
-                positif vers la droite).
+                positif vers la droite)
 
         Returns:
-            None.
+            None
         """
         x1, _, x2, _ = self.terrain.coords(self.raquette_id)
         nouveau_x1 = max(3, min(x1 + distance, self.LARGEUR - 3 - self.raquette.largeur))
@@ -312,10 +341,11 @@ class Partie:
         self.raquette.x = nouveau_x1
 
     def _touche_raquette_enfoncee(self, event: tk.Event) -> None:
-        """Mémorise une direction ou ouvre le menu de pause sur Échap.
+        """
+        Mémorise une direction ou ouvre le menu de pause sur Échap
 
         Args:
-            event: événement Tkinter contenant la touche enfoncée.
+            event: événement Tkinter contenant la touche enfoncée
         """
         if event.keysym == "Escape":
             self.ouvrir_menu_pause()
@@ -324,33 +354,38 @@ class Partie:
             self._touches_raquette.add(event.keysym)
 
     def _touche_raquette_relachee(self, event: tk.Event) -> None:
-        """Retire la touche relâchée de l'ensemble des touches actives.
+        """Retire la touche relâchée de l'ensemble des touches actives
 
         Args:
-            event: événement Tkinter contenant la touche relâchée.
+            event: événement Tkinter contenant la touche relâchée
         """
         self._touches_raquette.discard(event.keysym)
 
     def _reinitialiser_touches_raquette(self, event: tk.Event) -> None:
-        """Efface les directions actives lorsque le terrain perd le focus.
+        """
+        Efface les directions actives lorsque le terrain perd le focus
 
         Args:
-            event: événement Tkinter déclenché lors de la perte de focus.
+            event: événement Tkinter déclenché lors de la perte de focus
         """
         if event.widget == self.terrain:
             self._touches_raquette.clear()
 
     def _demarrer_animation_raquette(self) -> None:
-        """Programme le prochain pas d'animation de la raquette."""
+        """
+        Programme le prochain pas d'animation de la raquette
+        """
         if self._deplacement_raquette_id is None and not self.terminee:
             self._dernier_deplacement_raquette = time.perf_counter()
             self._deplacement_raquette_id = self.terrain.after(
                 self.DELAI_RAQUETTE,
-                self._animer_raquette,
+                self._animer_raquette
             )
 
     def _arreter_animation_raquette(self) -> None:
-        """Annule le pas de déplacement de raquette éventuellement programmé."""
+        """
+        Annule le pas de déplacement de raquette éventuellement programmé
+        """
         if (
             self._deplacement_raquette_id is not None
             and self.terrain.winfo_exists()
@@ -359,10 +394,11 @@ class Partie:
             self._deplacement_raquette_id = None
 
     def _animer_raquette(self) -> None:
-        """Déplace la raquette selon les touches et programme le pas suivant.
+        """
+        Déplace la raquette selon les touches et programme le pas suivant
 
         Le déplacement tient compte du temps réellement écoulé pour conserver
-        une vitesse régulière malgré les variations de cadence de Tkinter.
+        une vitesse régulière malgré les variations de cadence de Tkinter
         """
         self._deplacement_raquette_id = None
         if self.terminee or self.en_pause:
@@ -379,22 +415,23 @@ class Partie:
 
         self._deplacement_raquette_id = self.terrain.after(
             self.DELAI_RAQUETTE,
-            self._animer_raquette,
+            self._animer_raquette
         )
 
     def ajouter_point(self) -> None:
-        """Ajoute un point, actualise les records et traite la fin de grille.
+        """
+        Ajoute un point, actualise les records et traite la fin de grille
 
         En difficulté difficile ou hardcore, chaque point augmente aussi la
         vitesse de la raquette et de la balle. En mode infini, la grille est
-        recréée ; en mode normal, la partie se termine par une victoire.
+        recréée ; en mode normal, la partie se termine par une victoire
         """
         self.score += 1
         self.score_label.config(text=f"Score : {self.score}")
         meilleur_score = self.application.enregistrer_score(
             self.score,
             self.difficulte,
-            self.duree,
+            self.duree
         )
         if self.meilleur_score_label is not None:
             if self.difficulte in self.application.FICHIERS_MEILLEURS_SCORES:
@@ -416,21 +453,48 @@ class Partie:
                 self.creer_briques()
             elif self.duree == "niveaux" and self._charger_niveau_suivant():
                 self.creer_briques()
-                centre_x = self.LARGEUR / 2
-                centre_y = self.HAUTEUR / 1.10
-                self.terrain.coords(
-                    self.balle.identifiant,
-                    centre_x - self.balle.rayon,
-                    centre_y - self.balle.rayon,
-                    centre_x + self.balle.rayon,
-                    centre_y + self.balle.rayon,
-                )
+                self._repositionner_joueur(lancer_verticalement=True)
             else:
                 self.animation.arreter()
                 self.afficher_victoire()
 
+    def _repositionner_joueur(self, lancer_verticalement: bool = False) -> None:
+        """
+        Recentre la raquette et la balle avant leur prochain lancement
+        """
+        self._touches_raquette.clear()
+        position_raquette = self.LARGEUR / 2 - self.raquette.largeur / 2
+        x_raquette, _, _, _ = self.terrain.coords(self.raquette_id)
+        self.terrain.move(
+            self.raquette_id,
+            position_raquette - x_raquette,
+            0
+        )
+        self.raquette.x = position_raquette
+
+        centre_x = self.LARGEUR / 2
+        centre_y = self.HAUTEUR / 1.10
+        self.terrain.coords(
+            self.balle.identifiant,
+            centre_x - self.balle.rayon,
+            centre_y - self.balle.rayon,
+            centre_x + self.balle.rayon,
+            centre_y + self.balle.rayon
+        )
+        if lancer_verticalement:
+            vitesse = max(
+                math.hypot(self.balle.dx, self.balle.dy),
+                self.balle.VITESSE
+            )
+            self.balle.dx = 0
+            self.balle.dy = -vitesse
+        else:
+            self.balle.dy = -abs(self.balle.dy)
+
     def augmenter_vitesse_balle(self) -> None:
-        """Augmente la norme de la vitesse sans modifier sa direction."""
+        """
+        Augmente la norme de la vitesse sans modifier sa direction
+        """
         vitesse = (self.balle.dx**2 + self.balle.dy**2) ** 0.5
         nouvelle_vitesse = vitesse + self.AUGMENTATION_VITESSE_BALLE
         facteur = nouvelle_vitesse / vitesse
@@ -438,14 +502,15 @@ class Partie:
         self.balle.dy *= facteur
 
     def perdre_vie(self) -> None:
-        """Retire une vie et replace la balle, ou termine la partie à zéro.
+        """
+        Retire une vie et replace la balle, ou termine la partie à zéro
 
         Returns:
-            None.
+            None
 
         Effet de bord:
             Met à jour l'affichage, replace la balle si des vies restent, ou
-            ouvre l'écran de défaite à zéro vie.
+            ouvre l'écran de défaite à zéro vie
         """
         self.vies -= 1
         self.vies_label.config(text=f"Vies : {self.vies}")
@@ -454,27 +519,17 @@ class Partie:
             self.afficher_defaite()
             return
 
-
-        self.terrain.coords(
-            self.balle.identifiant,
-            self.LARGEUR / 2 - self.balle.rayon,
-            self.HAUTEUR / 2 - self.balle.rayon,
-            self.LARGEUR / 2 + self.balle.rayon,
-            self.HAUTEUR / 2 + self.balle.rayon,
-        )
-        self.balle.dy = -abs(self.balle.dy)
+        self._repositionner_joueur()
         self.animation.demarrer()
 
     def afficher_defaite(self) -> None:
-        """Affiche la fenêtre de fin lorsque la balle est perdue.
+        """
+        Affiche la fenêtre de fin lorsque la balle est perdue
 
-        La fenêtre propose de rejouer ou de quitter la partie.
-
-        Args:
-            Aucun.
+        La fenêtre propose de rejouer ou de quitter la partie
 
         Returns:
-            None.
+            None
         """
         self.terminee = True
         fenetre_principale = self.fenetre.winfo_toplevel()
@@ -490,15 +545,17 @@ class Partie:
             text="PARTIE TERMINÉE",
             bg=self.FOND,
             fg=self.CORAIL,
-            font=("Segoe UI", 16, "bold"),
+            font=("Segoe UI", 16, "bold")
         ).pack(pady=(18, 4))
+
         tk.Label(
             fenetre_fin,
             text=f"Score : {self.score}",
             bg=self.FOND,
             fg=self.TEXTE,
-            font=("Segoe UI", 11),
+            font=("Segoe UI", 11)
         ).pack(pady=(0, 7))
+
         tk.Button(
             fenetre_fin,
             text="Rejouer",
@@ -511,8 +568,9 @@ class Partie:
             bd=0,
             padx=14,
             pady=5,
-            cursor="hand2",
+            cursor="hand2"
         ).pack(side="left", expand=True)
+
         tk.Button(
             fenetre_fin,
             text="Quitter",
@@ -525,8 +583,9 @@ class Partie:
             bd=0,
             padx=14,
             pady=5,
-            cursor="hand2",
+            cursor="hand2"
         ).pack(side="right", expand=True)
+
         fenetre_fin.protocol(
             "WM_DELETE_WINDOW",
             lambda: self.quitter(fenetre_fin),
@@ -535,9 +594,10 @@ class Partie:
 
 
     def afficher_victoire(self) -> None:
-        """Affiche l'écran de victoire après la dernière brique du mode normal.
+        """
+        Affiche l'écran de victoire après la dernière brique du mode normal
 
-        La fenêtre propose de démarrer une nouvelle partie ou de quitter.
+        La fenêtre propose de démarrer une nouvelle partie ou de quitter
         """
         self.terminee = True
         fenetre_fin = tk.Toplevel(self.fenetre)
@@ -552,15 +612,17 @@ class Partie:
             text="BRAVO, VICTOIRE !",
             bg=self.FOND,
             fg=self.TURQUOISE,
-            font=("Segoe UI", 16, "bold"),
+            font=("Segoe UI", 16, "bold")
         ).pack(pady=(18, 4))
+
         tk.Label(
             fenetre_fin,
             text=f"Score : {self.score}",
             bg=self.FOND,
             fg=self.TEXTE,
-            font=("Segoe UI", 11),
+            font=("Segoe UI", 11)
         ).pack(pady=(0, 7))
+
         tk.Button(
             fenetre_fin,
             text="Rejouer",
@@ -573,8 +635,9 @@ class Partie:
             bd=0,
             padx=14,
             pady=5,
-            cursor="hand2",
+            cursor="hand2"
         ).pack(side="left", expand=True)
+
         tk.Button(
             fenetre_fin,
             text="Quitter",
@@ -587,8 +650,9 @@ class Partie:
             bd=0,
             padx=14,
             pady=5,
-            cursor="hand2",
+            cursor="hand2"
         ).pack(side="right", expand=True)
+
         fenetre_fin.protocol(
             "WM_DELETE_WINDOW",
             lambda: self.quitter(fenetre_fin),
@@ -597,35 +661,38 @@ class Partie:
 
 
     def rejouer(self, fenetre_fin: tk.Toplevel) -> None:
-        """Ferme la fenêtre de fin et démarre une nouvelle partie.
+        """
+        Ferme la fenêtre de fin et démarre une nouvelle partie
 
         Args:
-            fenetre_fin: fenêtre de fin de partie à fermer.
+            fenetre_fin: fenêtre de fin de partie à fermer
 
         Returns:
-            None.
+            None
         """
         fenetre_fin.destroy()
         self.fermer()
         self.application.jouer()
 
     def quitter(self, fenetre_fin: tk.Toplevel) -> None:
-        """Ferme la fenêtre de fin et la fenêtre de jeu.
+        """
+        Ferme la fenêtre de fin et la fenêtre de jeu
 
         Args:
-            fenetre_fin: fenêtre de fin de partie à fermer.
+            fenetre_fin: fenêtre de fin de partie à fermer
 
         Returns:
-            None.
+            None
         """
         fenetre_fin.destroy()
         self.fermer()
 
     def fermer(self) -> None:
-        """Arrête l'animation et ferme la fenêtre de jeu.
+        """
+        Arrête l'animation et ferme la fenêtre de jeu
 
         Returns:
-            None.
+            None
         """
         self.terminee = True
         self._touches_raquette.clear()

@@ -1,7 +1,12 @@
-"""Point d'entrée de l'application Casse-Brique.
+"""
+Ficher a executer pour le lancement du Casse-brique
 
-Importe la classe de l'application, crée son instance puis lance sa boucle
-d'événements Tkinter lorsque ce fichier est exécuté directement.
+08/10/2026
+
+SAEZ Hugo, QUESSARD Constantin
+
+To do :
+
 """
 
 from classcassebrique import CasseBriques

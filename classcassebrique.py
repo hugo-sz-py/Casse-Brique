@@ -1,4 +1,13 @@
-"""Fenêtre principale, menu de configuration et gestion des records."""
+"""
+Fenetre principale, menu de configuration et gestion des records
+
+08/10/2026
+
+SAEZ Hugo, QUESSARD Constantin
+
+To do :
+
+"""
 
 import tkinter as tk
 from pathlib import Path
@@ -8,15 +17,16 @@ from Implementation_Piles import Pile
 
 
 class CasseBriques:
-    """Gère le menu principal, les records et l'ouverture des parties.
+    """
+    Gere le menu principal, les records et l'ouverture des parties
 
     Attributs:
-        fenetre: fenêtre racine Tkinter de l'application.
-        meilleurs_scores: record par difficulté, ou ``None`` si illisible.
-        duree_var: variable Tkinter du mode normal, infini ou niveaux.
-        difficulte_var: variable Tkinter du niveau de difficulté.
-        meilleurs_scores_label: widget affichant les records du menu.
-        ecrans: pile des écrans utilisés pour la navigation.
+        fenetre: fenetre racine Tkinter de l'application
+        meilleurs_scores: record par difficulte, ou None si illisible
+        duree_var: variable Tkinter du mode normal, infini ou niveaux
+        difficulte_var: variable Tkinter du niveau de difficulte
+        meilleurs_scores_label: widget affichant les records du menu
+        ecrans: pile des ecrans utilises pour la navigation
     """
 
     FOND = "#0B1020"
@@ -34,23 +44,26 @@ class CasseBriques:
     }
 
     def __init__(self) -> None:
-        """Crée la fenêtre racine, charge les records et construit le menu."""
+        """
+        Cree la fenetre racine, charge les records et construit le menu
+        """
         self.fenetre = tk.Tk()
         self.fenetre.title("Casse-briques")
         self.fenetre.geometry("800x620")
         self.fenetre.minsize(720, 580)
         self.fenetre.configure(bg=self.FOND)
         self.ecrans = Pile()
-        self.meilleurs_scores = self._charger_meilleurs_scores()
+        self.meilleurs_scores = self.charger_meilleurs_scores()
         self.menu = tk.Frame(self.fenetre, bg=self.FOND)
         self.creer_menu()
-        self._afficher_ecran(self.menu)
+        self.afficher_ecran(self.menu)
 
     def creer_menu(self) -> None:
-        """Construit les choix de mode, de difficulté et les actions du menu.
+        """
+        Construit les choix de mode, de difficulte et les actions du menu
 
-        Les choix sont conservés dans des variables Tkinter utilisées ensuite
-        par ``jouer`` pour configurer une nouvelle partie.
+        Les choix sont conserves dans des variables Tkinter utilisees ensuite
+        par jouer() pour configurer une nouvelle partie
         """
         tk.Frame(self.menu, bg=self.TURQUOISE, height=5).pack(fill="x")
         contenu = tk.Frame(self.menu, bg=self.FOND)
@@ -61,14 +74,15 @@ class CasseBriques:
             text="CASSE-BRIQUES",
             bg=self.FOND,
             fg=self.TEXTE,
-            font=("Segoe UI", 27, "bold"),
+            font=("Segoe UI", 27, "bold")
         ).pack()
+
         tk.Label(
             contenu,
-            text="Choisis ton mode et prépare-toi à jouer",
+            text="Choisis ton mode et prepare-toi a jouer",
             bg=self.FOND,
             fg=self.TEXTE_DOUX,
-            font=("Segoe UI", 11),
+            font=("Segoe UI", 11)
         ).pack(pady=(2, 18))
 
         options = tk.Frame(contenu, bg=self.PANNEAU, padx=22, pady=16)
@@ -76,10 +90,12 @@ class CasseBriques:
         self.duree_var = tk.StringVar(value="normal")
         tk.Label(
             options, text="MODE DE JEU", bg=self.PANNEAU, fg=self.TURQUOISE,
-            font=("Segoe UI", 10, "bold"),
+            font=("Segoe UI", 10, "bold")
         ).pack(anchor="w")
+
         ligne_duree = tk.Frame(options, bg=self.PANNEAU)
         ligne_duree.pack(anchor="w", pady=(5, 14))
+
         for option in ("normal", "infini", "niveaux"):
             tk.Radiobutton(
                 ligne_duree,
@@ -97,14 +113,15 @@ class CasseBriques:
                 pady=7,
                 bd=0,
                 relief="flat",
-                cursor="hand2",
+                cursor="hand2"
             ).pack(side="left", padx=(0, 8))
 
         self.difficulte_var = tk.StringVar(value="facile")
         tk.Label(
-            options, text="DIFFICULTÉ", bg=self.PANNEAU, fg=self.TURQUOISE,
-            font=("Segoe UI", 10, "bold"),
+            options, text="DIFFICULTe", bg=self.PANNEAU, fg=self.TURQUOISE,
+            font=("Segoe UI", 10, "bold")
         ).pack(anchor="w")
+
         ligne_difficulte = tk.Frame(options, bg=self.PANNEAU)
         ligne_difficulte.pack(anchor="w", pady=(5, 0))
         for option in ("facile", "difficile", "hardcore"):
@@ -124,7 +141,7 @@ class CasseBriques:
                 pady=7,
                 bd=0,
                 relief="flat",
-                cursor="hand2",
+                cursor="hand2"
             ).pack(side="left", padx=(0, 8))
 
         scores = tk.Frame(contenu, bg=self.PANNEAU, padx=18, pady=12)
@@ -137,7 +154,7 @@ class CasseBriques:
             font=("Segoe UI", 10),
             justify="center",
             padx=5,
-            pady=2,
+            pady=2
         )
         self.meilleurs_scores_label.pack()
 
@@ -156,8 +173,9 @@ class CasseBriques:
             bd=0,
             padx=36,
             pady=10,
-            cursor="hand2",
+            cursor="hand2"
         ).pack(side="left", padx=8)
+
         tk.Button(
             boutons,
             text="QUITTER",
@@ -171,14 +189,16 @@ class CasseBriques:
             bd=0,
             padx=24,
             pady=10,
-            cursor="hand2",
+            cursor="hand2"
         ).pack(side="left", padx=8)
 
-    def _afficher_ecran(self, ecran: tk.Frame) -> None:
-        """Empile puis affiche un écran en masquant l'écran actuellement actif.
+
+    def afficher_ecran(self, ecran: tk.Frame) -> None:
+        """
+        Empile puis affiche un ecran en masquant l'ecran actuellement actif
 
         Args:
-            ecran: frame Tkinter à afficher.
+            ecran: frame Tkinter a afficher
         """
         if not self.ecrans.est_vide():
             self.ecrans.sommet().pack_forget()
@@ -186,7 +206,9 @@ class CasseBriques:
         ecran.pack(fill="both", expand=True)
 
     def revenir(self) -> None:
-        """Ferme l'écran actif et affiche l'écran précédent s'il existe."""
+        """
+        Ferme l'ecran actif et affiche l'ecran precedent s'il existe
+        """
         if self.ecrans.taille() <= 1:
             return
 
@@ -194,36 +216,37 @@ class CasseBriques:
         ecran_actif.destroy()
         self.ecrans.sommet().pack(fill="both", expand=True)
 
-    def _chemin_fichier_score(self, difficulte: str) -> Path:
-        """Construit le chemin du fichier de record d'une difficulté.
+    def chemin_fichier_score(self, difficulte: str) -> Path:
+        """
+        Construit le chemin du fichier de record d'une difficulte
 
         Args:
-            difficulte: clé de difficulté présente dans
-                ``FICHIERS_MEILLEURS_SCORES``.
+            difficulte: cle de difficulte presente dans FICHIERS_MEILLEURS_SCORES
 
         Returns:
-            Chemin du fichier associé, dans le dossier de ce module.
+            Chemin du fichier associe, dans le dossier de ce module
         """
         return Path(__file__).resolve().parent / self.FICHIERS_MEILLEURS_SCORES[difficulte]
 
-    def _charger_meilleurs_scores(self) -> dict[str, int | None]:
-        """Charge les records connus et signale les fichiers invalides.
+    def charger_meilleurs_scores(self) -> dict[str, int | None]:
+        """
+        Charge les records connus et signale les fichiers invalides
 
-        Un fichier absent représente un score initial de zéro. Une erreur de
-        lecture ou un contenu invalide est signalé à l'utilisateur et stocké
-        sous la forme ``None``.
+        Un fichier absent represente un score initial de zero. Une erreur de
+        lecture ou un contenu invalide est signale et stocke
+        sous la forme None
 
         Returns:
-            Dictionnaire associant chaque difficulté à son score ou ``None``.
+            Dictionnaire associant chaque difficulte a son score ou None
         """
         scores: dict[str, int | None] = {}
         for difficulte in self.FICHIERS_MEILLEURS_SCORES:
-            chemin = self._chemin_fichier_score(difficulte)
+            chemin = self.chemin_fichier_score(difficulte)
             try:
                 contenu = chemin.read_text(encoding="utf-8").strip()
                 scores[difficulte] = int(contenu) if contenu else 0
                 if scores[difficulte] is not None and scores[difficulte] < 0:
-                    raise ValueError("Le score ne peut pas être négatif.")
+                    raise ValueError("Le score ne peut pas etre negatif.")
             except FileNotFoundError:
                 scores[difficulte] = 0
             except (OSError, ValueError) as erreur:
@@ -231,15 +254,16 @@ class CasseBriques:
                 messagebox.showerror(
                     "Erreur de meilleur score",
                     f"Impossible de lire {chemin.name} : {erreur}",
-                    parent=self.fenetre,
+                    parent=self.fenetre
                 )
         return scores
 
     def _texte_meilleurs_scores(self) -> str:
-        """Formate les records pour l'affichage dans le menu.
+        """
+        Formate les records pour l'affichage dans le menu
 
         Returns:
-            Texte multiligne contenant le meilleur score de chaque difficulté.
+            Texte multiligne contenant le meilleur score de chaque difficulte
         """
         lignes = ["Meilleurs scores en mode infini"]
         for difficulte, score in self.meilleurs_scores.items():
@@ -248,51 +272,49 @@ class CasseBriques:
         return "\n".join(lignes)
 
     def meilleur_score(self, difficulte: str) -> int | None:
-        """Retourne le record actuellement connu pour une difficulté.
+        """
+        Retourne le record actuellement connu pour une difficulte
 
         Args:
-            difficulte: nom du niveau à consulter.
+            difficulte: nom du niveau a consulter
 
         Returns:
-            Score enregistré, ou ``None`` si la difficulté est inconnue ou
-            si son fichier de score n'est pas lisible.
+            Score enregistre, ou None si la difficulte est inconnue ou
+            si son fichier de score n'est pas lisible
         """
         return self.meilleurs_scores.get(difficulte)
 
-    def _texte_meilleur_score(self, difficulte: str) -> str:
-        """Convertit le record d'une difficulté en texte d'interface.
+    def texte_meilleur_score(self, difficulte: str) -> str:
+        """
+        Convertit le record d'une difficulte en texte d'interface
 
         Args:
-            difficulte: difficulté affichée.
+            difficulte: difficulte affichee
 
         Returns:
-            Score en texte, ``"indisponible"`` ou ``"non suivi"``.
+            Score en texte, "indisponible" ou "non suivi"
         """
         if difficulte not in self.FICHIERS_MEILLEURS_SCORES:
             return "non suivi"
         score = self.meilleur_score(difficulte)
         return str(score) if score is not None else "indisponible"
 
-    def enregistrer_score(
-        self,
-        score: int,
-        difficulte: str,
-        duree: str,
-    ) -> int | None:
-        """Enregistre un nouveau record si le score dépasse l'ancien.
+    def enregistrer_score(self, score: int, difficulte: str, duree: str) -> int | None:
+        """
+        Enregistre un nouveau record si le score depasse l'ancien
 
-        Seuls les modes infinis et les difficultés répertoriées sont suivis.
-        En cas d'erreur d'écriture, une boîte de dialogue est affichée et le
-        score de cette difficulté devient indisponible.
+        Seuls les modes infinis et les difficultes repertoriees sont suivis
+        En cas d'erreur d'ecriture, une boîte de dialogue est affichee et le
+        score de cette difficulte devient indisponible
 
         Args:
-            score: score obtenu par la partie.
-            difficulte: niveau de difficulté de la partie.
-            duree: mode de durée sélectionné.
+            score: score obtenu par la partie
+            difficulte: niveau de difficulte de la partie
+            duree: mode de duree selectionne
 
         Returns:
             Nouveau record, ancien record si aucun remplacement n'est requis,
-            ou ``None`` en cas d'échec de lecture/écriture.
+            ou None en cas d'echec de lecture/ecriture
         """
         meilleur_score = self.meilleur_score(difficulte)
         if (
@@ -303,7 +325,7 @@ class CasseBriques:
         ):
             return meilleur_score
 
-        chemin = self._chemin_fichier_score(difficulte)
+        chemin = self.chemin_fichier_score(difficulte)
         try:
             chemin.write_text(f"{score}\n", encoding="utf-8")
         except OSError as erreur:
@@ -321,7 +343,9 @@ class CasseBriques:
         return score
 
     def jouer(self) -> None:
-        """Affiche un écran de jeu configuré selon les choix du menu."""
+        """
+        Affiche un ecran de jeu configure selon les choix du menu
+        """
         import classpartie as Pt
 
         jeu = tk.Frame(self.fenetre, bg=self.FOND)
@@ -333,30 +357,34 @@ class CasseBriques:
             font=("Segoe UI", 11, "bold"),
         )
         score_label.pack(side="left", padx=(5, 12))
+
         tk.Label(
             barre, text="CASSE-BRIQUES", bg=self.PANNEAU, fg=self.TEXTE,
-            font=("Segoe UI", 11, "bold"),
+            font=("Segoe UI", 11, "bold")
         ).pack(side="left", padx=8)
+
         difficulte = self.difficulte_var.get()
         meilleur_score_label = tk.Label(
             barre,
-            text=f"Meilleur {difficulte} : {self._texte_meilleur_score(difficulte)}",
+            text=f"Meilleur {difficulte} : {self.texte_meilleur_score(difficulte)}",
             bg=self.PANNEAU,
             fg=self.TEXTE_DOUX,
-            font=("Segoe UI", 9),
+            font=("Segoe UI", 9)
         )
         meilleur_score_label.pack(side="left", padx=8)
+
         niveau_label = tk.Label(
             barre,
             text="",
             bg=self.PANNEAU,
             fg=self.TEXTE_DOUX,
-            font=("Segoe UI", 9, "bold"),
+            font=("Segoe UI", 9, "bold")
         )
         niveau_label.pack(side="left", padx=8)
+
         vies_label = tk.Label(
             barre, text="Vies : 3", bg=self.PANNEAU, fg=self.CORAIL,
-            font=("Segoe UI", 11, "bold"),
+            font=("Segoe UI", 11, "bold")
         )
         vies_label.pack(side="right", padx=(8, 5))
 
@@ -370,6 +398,7 @@ class CasseBriques:
             meilleur_score_label=meilleur_score_label,
             niveau_label=niveau_label,
         )
+
         tk.Button(
             barre,
             text="PAUSE",
@@ -385,9 +414,12 @@ class CasseBriques:
             pady=4,
             cursor="hand2",
         ).pack(side="right", padx=6)
-        self._afficher_ecran(jeu)
+
+        self.afficher_ecran(jeu)
         partie.terrain.focus_set()
 
     def lancer(self) -> None:
-        """Lance la boucle d'événements Tkinter de la fenêtre principale."""
+        """
+        Lance la boucle d'evenements Tkinter de la fenetre principale
+        """
         self.fenetre.mainloop()
