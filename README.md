@@ -60,5 +60,4 @@ pas utilisées dans le déroulement actuel du jeu.
 
 ## Dépôt Git
 
-Répertoire local du dépôt : `C:\Users\quess\Documents\CPE\3ETI\Développement logiciel en Python`.
-Aucune adresse de dépôt distant (remote) n'est actuellement configurée.
+Adresse GIT : `https://github.com/hugo-sz-py/Casse-Brique/tree/main`
