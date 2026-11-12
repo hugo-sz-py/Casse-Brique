@@ -6,12 +6,6 @@ Jeu de casse-briques réalisé en Python avec Tkinter.
 
 Exécuter `main.py` avec Python :
 
-```text
-python main.py
-```
-
-Tkinter est fourni avec la plupart des installations Python pour Windows. Aucun
-autre paquet externe n'est requis.
 
 ## Règles du jeu
 
@@ -54,9 +48,6 @@ autre paquet externe n'est requis.
 - `Implementation_Piles.py` : implémentation de la structure de données **Pile**
   (empiler, dépiler, consulter le sommet, tester si elle est vide et obtenir sa
   taille).
-
-Les structures File et Pile sont fournies dans ces deux fichiers ; elles ne sont
-pas utilisées dans le déroulement actuel du jeu.
 
 ## Dépôt Git
 
